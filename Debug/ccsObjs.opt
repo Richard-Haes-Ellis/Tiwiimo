@@ -1,0 +1,1 @@
+"./startup_ccs.obj" "./usb_dev_mouse.obj" "./usb_mouse_structs.obj" "./drivers/buttons.obj" "./drivers/pinout.obj" "./utils/uartstdio.obj" "../usb_dev_keyboard_ccs.cmd" -llibc.a -l"/home/richard/ti/tivaware_c_series_2_1_4_178/driverlib/ccs/Debug/driverlib.lib" -l"/home/richard/ti/tivaware_c_series_2_1_4_178/usblib/ccs/Debug/usblib.lib" 

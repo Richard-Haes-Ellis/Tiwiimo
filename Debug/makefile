@@ -129,34 +129,34 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXE_OUTPUTS += \
-usb_dev_mouse.out \
+Tiwiimo.out \
 
 EXE_OUTPUTS__QUOTED += \
-"usb_dev_mouse.out" \
+"Tiwiimo.out" \
 
 BIN_OUTPUTS += \
-usb_dev_mouse.bin \
+Tiwiimo.bin \
 
 BIN_OUTPUTS__QUOTED += \
-"usb_dev_mouse.bin" \
+"Tiwiimo.bin" \
 
 
 # All Target
-all: usb_dev_mouse.out
+all: Tiwiimo.out
 
 # Tool invocations
-usb_dev_mouse.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+Tiwiimo.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -O2 --advice:power=all -g --gcc --define=ccs="ccs" --define=PART_TM4C1294NCPDT --define=TARGET_IS_TM4C129_RA0 --define=UART_BUFFERED --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --ual -z -m"usb_dev_keyboard_ccs.map" --stack_size=1024 --heap_size=0 -i"/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/lib" -i"/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="usb_dev_mouse_linkInfo.xml" --rom_model -o "usb_dev_mouse.out" $(ORDERED_OBJS)
+	"/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -O2 --advice:power=all -g --gcc --define=ccs="ccs" --define=PART_TM4C1294NCPDT --define=TARGET_IS_TM4C129_RA0 --define=UART_BUFFERED --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --ual -z -m"usb_dev_keyboard_ccs.map" --stack_size=1024 --heap_size=0 -i"/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/lib" -i"/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="Tiwiimo_linkInfo.xml" --rom_model -o "Tiwiimo.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
 
-usb_dev_mouse.bin: $(EXE_OUTPUTS)
+Tiwiimo.bin: $(EXE_OUTPUTS)
 	@echo 'Building files: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo 'Invoking: ARM Hex Utility'
-	"/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/bin/armhex"  -o "usb_dev_mouse.bin" $(EXE_OUTPUTS__QUOTED)
+	"/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/bin/armhex"  -o "Tiwiimo.bin" $(EXE_OUTPUTS__QUOTED)
 	@echo 'Finished building: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -170,7 +170,7 @@ clean:
 	-@echo ' '
 
 post-build:
-	-"/home/richard/ti/ccsv8/utils/tiobj2bin/tiobj2bin" "usb_dev_mouse.out" "usb_dev_mouse.bin" "/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/bin/armofd" "/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/bin/armhex" "/home/richard/ti/ccsv8/utils/tiobj2bin/mkhex4bin"
+	-"/home/richard/ti/ccsv8/utils/tiobj2bin/tiobj2bin" "Tiwiimo.out" "Tiwiimo.bin" "/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/bin/armofd" "/home/richard/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/bin/armhex" "/home/richard/ti/ccsv8/utils/tiobj2bin/mkhex4bin"
 	-@echo ' '
 
 .PHONY: all clean dependents

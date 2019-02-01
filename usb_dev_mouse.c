@@ -29,6 +29,8 @@
 // Flags de operacion
 volatile bool g_bConnected = false; // Varibale que indica si esta conectado a PC
 volatile bool g_bSuspended = false; // Variable que indica si se ha descconectado del bus USB
+volatile uint32_t g_ui32SysTickCount;
+#define SYSTICKS_PER_SECOND     100
 
 // Varibles de estado del raton
 volatile enum{
@@ -96,8 +98,13 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 	return (0);
 }
 
+void SysTickIntHandler(void){
+    g_ui32SysTickCount++;
+}
+
 int main(void)
 {
+	uint_fast32_t ui32LastTickCount;
     bool bLastSuspend;
     uint32_t ui32SysClock;
     uint32_t ui32PLLRate;
@@ -138,6 +145,11 @@ int main(void)
     // Pass our device information to the USB HID device class driver,
     // initialize the USB controller and connect the device to the bus.
     USBDHIDMouseInit(0, &g_sMouseDevice);
+
+    // Set the system tick to fire 100 times per second.
+    ROM_SysTickPeriodSet(ui32SysClock / SYSTICKS_PER_SECOND);
+    ROM_SysTickIntEnable();
+    ROM_SysTickEnable();
 
 
     // Initial Message

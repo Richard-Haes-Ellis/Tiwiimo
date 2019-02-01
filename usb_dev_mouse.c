@@ -1,4 +1,5 @@
 
+// Librarias
 #include <stdbool.h>
 #include <stdint.h>
 #include "inc/hw_memmap.h"
@@ -19,68 +20,38 @@
 #include "usblib/device/usbdevice.h"
 #include "usblib/device/usbdhid.h"
 #include "usblib/device/usbdhidkeyb.h"
-
 #include <usblib/device/usbdhidmouse.h>
-
 #include "drivers/buttons.h"
 #include "drivers/pinout.h"
 #include "usb_mouse_structs.h"
 #include "utils/uartstdio.h"
 
-#define SYSTICKS_PER_SECOND     100
-volatile bool g_bConnected = false;
-volatile bool g_bSuspended = false;
-volatile uint32_t g_ui32SysTickCount;
-#define MAX_SEND_DELAY          50
-volatile bool g_bDisplayUpdateRequired;
+// Flags de operacion
+volatile bool g_bConnected = false; // Varibale que indica si esta conectado a PC
+volatile bool g_bSuspended = false; // Variable que indica si se ha descconectado del bus USB
 
+// Varibles de estado del raton
 volatile enum{
-    // Unconfigured.
+    // Raton sin configurar
     STATE_UNCONFIGURED,
-	// No keys to send and not waiting on data.
+	// Nada que mandar y a la espera de datos
     STATE_IDLE,
-	// Suspended state
+	// Estado de suspenso
 	STATE_SUSPEND,
-    // Waiting on data to be sent out.
+    // Esperando a los datos para enviar (No lo usamos)
     STATE_SENDING
 }
+
+// Inicialmente marcamos el dispositivo como no configurado
 g_iMouseState = STATE_UNCONFIGURED;
 
-
-bool WaitForSendIdle(uint_fast32_t ui32TimeoutTicks)
-{
-    uint32_t ui32Start;
-    uint32_t ui32Now;
-    uint32_t ui32Elapsed;
-
-    ui32Start = g_ui32SysTickCount;
-    ui32Elapsed = 0;
-
-    while(ui32Elapsed < ui32TimeoutTicks)
-    {
-        // Is the mouse is idle, return immediately.
-        if(g_iMouseState == STATE_IDLE)
-        {
-            return(true);
-        }
-
-        // Determine how much time has elapsed since we started waiting.  This
-        // should be safe across a wrap of g_ui32SysTickCount.
-        ui32Now = g_ui32SysTickCount;
-        ui32Elapsed = ((ui32Start < ui32Now) ? (ui32Now - ui32Start) :
-                     (((uint32_t)0xFFFFFFFF - ui32Start) + ui32Now + 1));
-    }
-
-    // If we get here, we timed out so return a bad return code to let the
-    // caller know.
-    return(false);
-}
-
+// Runtina de manejo de eventos referidos al puerto USB
 uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		uint32_t ui32MsgData, void *pvMsgData) {
 
 	switch (ui32Event)
 	{
+		// Si se conecta al bus ui32Event se pondra a USB_EVENT_CONNECTED
 		case USB_EVENT_CONNECTED:
 		{
 			g_bConnected = true;
@@ -88,32 +59,34 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 			break;
 		}
 
-		// The host has disconnected from us.
+		// Si se desconecta al bus ui32Event se pondra a USB_EVENT_DISCONNECTED.
 		case USB_EVENT_DISCONNECTED:
 		{
 			g_bConnected = false;
 			break;
 		}
 
-		// Nos vamos al estado de espera despues de haber hecho algo
+		// Nos vamos al estado de espera despues de haber enviado informacion
 		case USB_EVENT_TX_COMPLETE: {
 			g_iMouseState = STATE_IDLE;
 			break;
 		}
 
+		// Si se ha suspendido el bus USB ui32Event saltara al estado USB_EVENT_SUSPEND
 		case USB_EVENT_SUSPEND: {
 			g_iMouseState = STATE_SUSPEND;
 			g_bSuspended = true;
 			break;
 		}
 
+		// Si el bus se recupera volvemos al estado de IDLE
 		case USB_EVENT_RESUME: {
 			g_iMouseState = STATE_IDLE;
 			g_bSuspended = false;
 			break;
 		}
 
-		// We ignore all other events.
+		// Cualquier otro evento la ignoramos
 		default:
 		{
 			break;
@@ -123,13 +96,8 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 	return (0);
 }
 
-void SysTickIntHandler(void){
-    g_ui32SysTickCount++;
-}
-
 int main(void)
 {
-    uint_fast32_t ui32LastTickCount;
     bool bLastSuspend;
     uint32_t ui32SysClock;
     uint32_t ui32PLLRate;
@@ -171,15 +139,11 @@ int main(void)
     // initialize the USB controller and connect the device to the bus.
     USBDHIDMouseInit(0, &g_sMouseDevice);
 
-    // Set the system tick to fire 100 times per second.
-    ROM_SysTickPeriodSet(ui32SysClock / SYSTICKS_PER_SECOND);
-    ROM_SysTickIntEnable();
-    ROM_SysTickEnable();
 
     // Initial Message
     UARTprintf("\033[2J\033[H\n");
     UARTprintf("******************************\n");
-    UARTprintf("*      usb-dev-keyboard      *\n");
+    UARTprintf("*         usb-mouse	         *\n");
     UARTprintf("******************************\n");
 
     // The main loop starts here.  We begin by waiting for a host connection
@@ -193,48 +157,38 @@ int main(void)
         // Tell the user what we are doing and provide some basic instructions.
         UARTprintf("\nWaiting For Host...\n");
 
-        // Wait here until USB device is connected to a host.
-        while(!g_bConnected)
-        {
-        }
+        // Nos quedamos esperado si no esta conectado al host (PC)
+        while(!g_bConnected){}
 
-        // Update the status.
+        // Una vez connectada informamos por UART
         UARTprintf("\nHost Connected...\n");
 
-        // Enter the idle state.
+        // Marcamos el estado de espera
         g_iMouseState = STATE_IDLE;
 
-        // Button not pressed
+        // Declaramos variable de boton
         uint8_t press = 0;
 
-        // Assume that the bus is not currently suspended if we have just been
-        // configured.
+        // En principio marcamos como bus no suspenso (Ya que nos acabamos de conectar)
         bLastSuspend = false;
 
-        // Keep transferring data from the UART to the USB host for as
-        // long as we are connected to the host.
-        while(g_bConnected)
-        {
-
-            // Has the suspend state changed since last time we checked?
-            if(bLastSuspend != g_bSuspended)
-            {
-                // Yes - the state changed. Print state to terminal.
+        // Continuamos con nuestra logica de programa (Funcionnalidad del raton)
+        // mientras estamos conectados. Esta variable es manejada por el MouseHandler
+        // en funcion de los eventos que ocurran
+        while(g_bConnected){
+            // Comprobamos si el estado de suspenso ha cambiado
+            if(bLastSuspend != g_bSuspended){
+                // En caso de que si informamos por UART
                 bLastSuspend = g_bSuspended;
-                if(bLastSuspend)
-                {
+                if(bLastSuspend){
                     UARTprintf("\nBus Suspended ... \n");
-                }
-                else
-                {
+                }else{
                     UARTprintf("\nHost Connected ... \n");
                 }
             }
+            // Si estamos en el estado de espera podemos realizar las funcionalidades normales
             if (g_iMouseState == STATE_IDLE) {
-
-				//
-				// See if the buttons updated.
-				//
+            	// Comprobamos si los botones han sido pulsados
 				ButtonsPoll(&ui8ButtonsChanged, &ui8Buttons);
 
 				//

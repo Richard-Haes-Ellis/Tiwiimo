@@ -205,7 +205,6 @@ int main(void)
 
 				//
 				// Set button 1 if right pressed.
-				//
 				if (ui8Buttons & RIGHT_BUTTON)
 				{
 

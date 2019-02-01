@@ -158,8 +158,6 @@ int main(void)
     UARTprintf("*         usb-mouse	         *\n");
     UARTprintf("******************************\n");
 
-    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, 0);
-
     // The main loop starts here.  We begin by waiting for a host connection
     // then drop into the main keyboard handling section.  If the host
     // disconnects, we return to the top and wait for a new connection.
@@ -181,8 +179,7 @@ int main(void)
         g_iMouseState = STATE_IDLE;
 
         // Declaramos variable de boton
-        uint8_t pressRight,lastPressRight = 0;
-        uint8_t pressLeft,lastPressLeft   = 0;
+        uint8_t press = 0;
 
         // En principio marcamos como bus no suspenso (Ya que nos acabamos de conectar)
         bLastSuspend = false;
@@ -203,41 +200,46 @@ int main(void)
             }
             // Si estamos en el estado de espera podemos realizar las funcionalidades normales
             if (g_iMouseState == STATE_IDLE) {
-				// calculate the movement distance
-				int8_t xDistance = 0;
-				int8_t yDistance = 0;
-
-				USBDHIDMouseStateChange((void *) &g_sMouseDevice,
-										xDistance,
-										yDistance,
-										MOUSE_REPORT_SIZE);
-
-				// USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,MOUSE_REPORT_SIZE);
-
-				// Comprobamos si los botones han sido pulsados
+            	// Comprobamos si los botones han sido pulsados
 				ButtonsPoll(&ui8ButtonsChanged, &ui8Buttons);
 
-				if (!lastPressRight && (ui8Buttons & RIGHT_BUTTON)){ // LOW TO HIGH
-					USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,MOUSE_REPORT_BUTTON_1);
-					lastPressRight = 1;
-					UARTprintf("Button 1 pressed\n");
-				}
-				if(lastPressRight  && !(ui8Buttons & RIGHT_BUTTON)){ // HIGH TO LOW
-					USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0, 0);
-					lastPressRight = 0;
-					UARTprintf("Button 1 released\n");
-				}
-				if (!lastPressLeft && (ui8Buttons & LEFT_BUTTON)){ // LOW TO HIGH
-					USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,MOUSE_REPORT_BUTTON_2);
-					lastPressLeft = 1;
-					UARTprintf("Button 2 pressed\n");
-				}
-				if (lastPressLeft && !(ui8Buttons & LEFT_BUTTON)){ // HIGH TO LOW
-					USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0, 0);
-					lastPressLeft = 0;
-					UARTprintf("Button 2 released\n");
+				//
+				// Set button 1 if right pressed.
+				if (ui8Buttons & RIGHT_BUTTON)
+				{
+
+					// calculate the movement distance
+					int8_t xDistance = 100;
+					int8_t yDistance = 0;
+
+					GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, GPIO_PIN_3);
+
+					USBDHIDMouseStateChange((void *) &g_sMouseDevice, xDistance,
+											yDistance, MOUSE_REPORT_SIZE);
 				}
 
+				GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, 0);
+
+				USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,
+				MOUSE_REPORT_SIZE);
+
+				//
+				// Set button 2 if left pressed.
+				//
+				if (ui8Buttons & LEFT_BUTTON)
+				{
+
+					if (!press)
+					{
+						USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,MOUSE_REPORT_BUTTON_1); //press
+						press = 1;
+					}
+					else
+					{
+						USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,0);
+						press = 0;
+					}
+				}
 			}
 		}
     }

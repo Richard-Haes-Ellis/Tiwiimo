@@ -56,48 +56,48 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 	switch (ui32Event)
 	{
 	// Si se conecta al bus ui32Event se pondra a USB_EVENT_CONNECTED
-		case USB_EVENT_CONNECTED:
-		{
-			g_bConnected = true;
-			g_bSuspended = false;
-			break;
-		}
+	case USB_EVENT_CONNECTED:
+	{
+		g_bConnected = true;
+		g_bSuspended = false;
+		break;
+	}
 
-			// Si se desconecta al bus ui32Event se pondra a USB_EVENT_DISCONNECTED.
-		case USB_EVENT_DISCONNECTED:
-		{
-			g_bConnected = false;
-			break;
-		}
+		// Si se desconecta al bus ui32Event se pondra a USB_EVENT_DISCONNECTED.
+	case USB_EVENT_DISCONNECTED:
+	{
+		g_bConnected = false;
+		break;
+	}
 
-			// Nos vamos al estado de espera despues de haber enviado informacion
-		case USB_EVENT_TX_COMPLETE:
-		{
-			g_iMouseState = STATE_IDLE;
-			break;
-		}
+		// Nos vamos al estado de espera despues de haber enviado informacion
+	case USB_EVENT_TX_COMPLETE:
+	{
+		g_iMouseState = STATE_IDLE;
+		break;
+	}
 
-			// Si se ha suspendido el bus USB ui32Event saltara al estado USB_EVENT_SUSPEND
-		case USB_EVENT_SUSPEND:
-		{
-			g_iMouseState = STATE_SUSPEND;
-			g_bSuspended = true;
-			break;
-		}
+		// Si se ha suspendido el bus USB ui32Event saltara al estado USB_EVENT_SUSPEND
+	case USB_EVENT_SUSPEND:
+	{
+		g_iMouseState = STATE_SUSPEND;
+		g_bSuspended = true;
+		break;
+	}
 
-			// Si el bus se recupera volvemos al estado de IDLE
-		case USB_EVENT_RESUME:
-		{
-			g_iMouseState = STATE_IDLE;
-			g_bSuspended = false;
-			break;
-		}
+		// Si el bus se recupera volvemos al estado de IDLE
+	case USB_EVENT_RESUME:
+	{
+		g_iMouseState = STATE_IDLE;
+		g_bSuspended = false;
+		break;
+	}
 
-			// Cualquier otro evento la ignoramos
-		default:
-		{
-			break;
-		}
+		// Cualquier otro evento la ignoramos
+	default:
+	{
+		break;
+	}
 	}
 
 	return (0);

@@ -30,7 +30,7 @@ volatile bool g_bConnected = false; // Varibale que indica si esta conectado a P
 volatile bool g_bSuspended = false; // Variable que indica si se ha descconectado del bus USB
 volatile uint32_t g_ui32SysTickCount;
 #define SYSTICKS_PER_SECOND     100
-#define MAX_SEND_DELAY          60
+#define MAX_SEND_DELAY          80
 
 // Varibles de estado del raton
 volatile enum
@@ -154,8 +154,7 @@ int main(void)
 	// Run from the PLL at 120 MHz.
 	ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
 	SYSCTL_OSC_MAIN | SYSCTL_USE_PLL |
-	SYSCTL_CFG_VCO_480),
-											120000000);
+	SYSCTL_CFG_VCO_480),120000000);
 
 	// Configure the device pins for this board.
 	PinoutSet(false, true);
@@ -277,65 +276,69 @@ int main(void)
 
 				// Detectamos flancos de subida o bajada
 				if (currStateL && !prevStateL){
-					// UARTprintf("Button 1 ON\n");
+					UARTprintf("Button LEFT ON\n");
 					prevStateL = 1;
 					butChangedL = 1;
 				}else if (!currStateL && prevStateL){
-					// UARTprintf("Button 1 OFF\n");
+					UARTprintf("Button LEFT OFF\n");
 					prevStateL = 0;
 					butChangedL = 0;
 				}
 
 				// Detectamos flancos de subida o bajada
 				if (currStateR && !prevStateR){
-					// UARTprintf("Button 1 ON\n");
+					UARTprintf("Button RIGHT ON\n");
 					prevStateR = 1;
 					butChangedR = 1;
 				}else if (!currStateR && prevStateR){
-					// UARTprintf("Button 1 OFF\n");
+					UARTprintf("Button RIGHT OFF\n");
 					prevStateR = 0;
-					butChangedR = 0;
+					butChangedR = 1;
 				}
 
 				if(butChangedL || butChangedR){ // Solo cuando pulsamos oo dejamos de pulsar
-					butChangedL = 0;
-					butChangedR = 0;
-					UARTprintf("Button change detected\n");
+					// UARTprintf("Button change detected\n");
 					// Mandamos el reportaje al host.
 					g_iMouseState = STATE_SENDING;
 
 					uint32_t ui32Retcode = 0;
-					uint8_t bSuccess = 0;
+					uint8_t  bSuccess = 0;
+					uint32_t numAtemp = 0;
 
 					// Si prevStateL es 1, currStateL es 0, que es igual a Soltar el boton
-					while(!bSuccess){
-					ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,
-															(char) 0,
-															(char) 0,
-															(currStateL ? MOUSE_REPORT_BUTTON_1 : 0));
-
-					// Did we schedule the report for transmission?
-					if (ui32Retcode == MOUSE_SUCCESS)
-					{
-						// Esperamos a que el host reciba el reportaje si ha ido bien
-						bSuccess = WaitForSendIdle(MAX_SEND_DELAY);
-
-						// Se ha acabado el tiempo y no se ha puesto en IDLE?
-						if (!bSuccess)
-						{
-							// Asumimos que el host se ha desconectado
-							UARTprintf("Send timed out!\n");
-							g_bConnected = 0;
+					while(!bSuccess && numAtemp < 40000){
+						numAtemp++;
+						if(butChangedL){
+							ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,
+																  (char) 0,
+																  (char) 0,
+																  (currStateL? MOUSE_REPORT_BUTTON_2 : 0x00));
+						}else if(butChangedR){
+							ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,
+																  (char) 0,
+																  (char) 0,
+																  (currStateR? MOUSE_REPORT_BUTTON_1 : 0x00));
 						}
-						UARTprintf("Success\n");
+						// Did we schedule the report for transmission?
+						if (ui32Retcode == MOUSE_SUCCESS){
+							// Esperamos a que el host reciba el reportaje si ha ido bien
+							bSuccess = WaitForSendIdle(MAX_SEND_DELAY);
+
+							// Se ha acabado el tiempo y no se ha puesto en IDLE?
+							if (!bSuccess){
+								// Asumimos que el host se ha desconectado
+								UARTprintf("Timout de envio\n");
+								g_bConnected = 0;
+							}
+							UARTprintf("Reporte enviado %d\n",numAtemp);
+						}else{
+							// Error al mandar reporte ignoramos petcion e informamos
+							// UARTprintf("No ha sido posible enviar reporte.\n");
+							bSuccess = false;
+						}
 					}
-					else
-					{
-						// Error al mandar reporte ignoramos petcion e informamos
-						UARTprintf("Can't send report.\n");
-						bSuccess = false;
-					}
-					}
+					butChangedL = 0;
+					butChangedR = 0;
 				}
 			}
 		}

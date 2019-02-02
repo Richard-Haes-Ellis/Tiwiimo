@@ -31,6 +31,7 @@ volatile bool g_bSuspended = false; // Variable que indica si se ha descconectad
 volatile uint32_t g_ui32SysTickCount;
 #define SYSTICKS_PER_SECOND     100
 #define MAX_SEND_DELAY          80
+#define MOUSE_REPORT_BUTTON_RELEASE 0x00
 
 // Varibles de estado del raton
 volatile enum
@@ -284,7 +285,7 @@ int main(void)
 					UARTprintf("Button DOWN (LEFT  CLICK) OFF\n");
 					prevStateDo = 0;
 					butChange   = 0;
-					butStat = 0x06;
+					butStat = MOUSE_REPORT_BUTTON_RELEASE;
 				}
 
 				// Detectamos flancos de subida o bajada
@@ -297,7 +298,7 @@ int main(void)
 					UARTprintf("Button UP   (RIGHT CLICK) OFF\n");
 					prevStateUp = 0;
 					butChange   = 1;
-					butStat = 0x06;
+					butStat = MOUSE_REPORT_BUTTON_RELEASE;
 				}
 
 				if(butChange){ // Solo cuando pulsamos oo dejamos de pulsar

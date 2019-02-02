@@ -30,6 +30,7 @@ volatile bool g_bConnected = false; // Varibale que indica si esta conectado a P
 volatile bool g_bSuspended = false; // Variable que indica si se ha descconectado del bus USB
 volatile uint32_t g_ui32SysTickCount;
 #define SYSTICKS_PER_SECOND     100
+#define MAX_SEND_DELAY          60
 
 // Varibles de estado del raton
 volatile enum
@@ -107,13 +108,46 @@ void SysTickIntHandler(void)
 	g_ui32SysTickCount++;
 }
 
+
+bool WaitForSendIdle(uint32_t ui32TimeoutTicks){
+    uint32_t ui32Start, ui32Now, ui32Elapsed;
+
+    ui32Start = g_ui32SysTickCount;
+    ui32Elapsed = 0;
+
+    while(ui32Elapsed < ui32TimeoutTicks)
+    {
+        //
+        // Is the mouse is idle or we have disconnected, return immediately.
+        //
+        if((g_iMouseState == STATE_IDLE) ||
+           (g_iMouseState == STATE_UNCONFIGURED))
+        {
+            return(true);
+        }
+
+        // Determine how much time has elapsed since we started waiting.  This
+        // should be safe across a wrap of g_ui32SysTickCount.  I suspect you
+        // won't likely leave the app running for the 497.1 days it will take
+        // for this to occur but you never know...
+
+        ui32Now = g_ui32SysTickCount;
+        ui32Elapsed = (ui32Start < ui32Now) ? (ui32Now - ui32Start) :
+                           (((uint32_t)0xFFFFFFFF - ui32Start) + ui32Now + 1);
+    }
+
+    // If we get here, we timed out so return a bad return code to let the
+    // caller know. (That means that 497.1 days have passed .. wow
+    return(false);
+}
+
+
 int main(void)
 {
-	uint_fast32_t ui32LastTickCount;
 	bool bLastSuspend;
 	uint32_t ui32SysClock;
 	uint32_t ui32PLLRate;
-	uint32_t stat;
+
 
 	uint8_t xDistance = 0, yDistance = 0;
 
@@ -171,8 +205,6 @@ int main(void)
 	// disconnects, we return to the top and wait for a new connection.
 	while (1)
 	{
-		uint32_t status;
-		uint32_t Atempt=0;
 		uint8_t ui8Buttons;
 		uint8_t ui8ButtonsChanged;
 
@@ -190,9 +222,9 @@ int main(void)
 		// Marcamos el estado de espera
 		g_iMouseState = STATE_IDLE;
 
-		// Declaramos variable de boton
-		uint8_t pressL,pressR = 0;
-		uint8_t prevL,prevR = 0;
+		// Declaramos variable de botones
+		uint8_t currStateL,prevStateL = 0;
+		uint8_t currStateR,prevStateR = 0;
 
 		// En principio marcamos como bus no suspenso (Ya que nos acabamos de conectar)
 		bLastSuspend = false;
@@ -237,49 +269,74 @@ int main(void)
 				// Comprobamos si los botones han sido pulsados
 				ButtonsPoll(&ui8ButtonsChanged, &ui8Buttons);
 
+				currStateL = (ui8Buttons & LEFT_BUTTON);
+				currStateR = (ui8Buttons & RIGHT_BUTTON);
 
-//				if (ui8Buttons & LEFT_BUTTON){
-//					if (!pressL){
-//						USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,MOUSE_REPORT_BUTTON_2);
-//						USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,0);
-//						pressL = 0;
-//					}else{
-//						//USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,0);
-//						pressL = 0;
-//					}
-//				}
+				uint8_t butChangedL = 0;
+				uint8_t butChangedR = 0;
 
-				if (true){
-					if ((ui8Buttons & LEFT_BUTTON) && !prevL){
-						while (stat != MOUSE_SUCCESS){
-							stat = USBDHIDMouseStateChange(
-									(void *) &g_sMouseDevice, 0, 0,
-									MOUSE_REPORT_BUTTON_1);
-						}
-						stat = 0;
-						UARTprintf("Button 1 ON\n");
-						prevL = 1;
-					}else if (!(ui8Buttons & LEFT_BUTTON) && prevL){
-						while (stat != MOUSE_SUCCESS){
-							stat = USBDHIDMouseStateChange(
-									(void *) &g_sMouseDevice, 0, 0, 0);
-						}
-						stat = 0;
-						UARTprintf("Button 1 OFF\n");
-						prevL = 0;
-					}
+				// Detectamos flancos de subida o bajada
+				if (currStateL && !prevStateL){
+					// UARTprintf("Button 1 ON\n");
+					prevStateL = 1;
+					butChangedL = 1;
+				}else if (!currStateL && prevStateL){
+					// UARTprintf("Button 1 OFF\n");
+					prevStateL = 0;
+					butChangedL = 0;
 				}
 
-//				if (ui8Buttons & RIGHT_BUTTON){
-//					if (!pressR){
-//						USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,MOUSE_REPORT_BUTTON_2);
-//						pressR = 1;
-//					}else{
-//						// USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,0);
-//						pressR = 0;
-//					}
-//				}
-				//USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,0);
+				// Detectamos flancos de subida o bajada
+				if (currStateR && !prevStateR){
+					// UARTprintf("Button 1 ON\n");
+					prevStateR = 1;
+					butChangedR = 1;
+				}else if (!currStateR && prevStateR){
+					// UARTprintf("Button 1 OFF\n");
+					prevStateR = 0;
+					butChangedR = 0;
+				}
+
+				if(butChangedL || butChangedR){ // Solo cuando pulsamos oo dejamos de pulsar
+					butChangedL = 0;
+					butChangedR = 0;
+					UARTprintf("Button change detected\n");
+					// Mandamos el reportaje al host.
+					g_iMouseState = STATE_SENDING;
+
+					uint32_t ui32Retcode = 0;
+					uint8_t bSuccess = 0;
+
+					// Si prevStateL es 1, currStateL es 0, que es igual a Soltar el boton
+					while(!bSuccess){
+					ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,
+															(char) 0,
+															(char) 0,
+															(currStateL ? MOUSE_REPORT_BUTTON_1 : 0));
+
+					// Did we schedule the report for transmission?
+					if (ui32Retcode == MOUSE_SUCCESS)
+					{
+						// Esperamos a que el host reciba el reportaje si ha ido bien
+						bSuccess = WaitForSendIdle(MAX_SEND_DELAY);
+
+						// Se ha acabado el tiempo y no se ha puesto en IDLE?
+						if (!bSuccess)
+						{
+							// Asumimos que el host se ha desconectado
+							UARTprintf("Send timed out!\n");
+							g_bConnected = 0;
+						}
+						UARTprintf("Success\n");
+					}
+					else
+					{
+						// Error al mandar reporte ignoramos petcion e informamos
+						UARTprintf("Can't send report.\n");
+						bSuccess = false;
+					}
+					}
+				}
 			}
 		}
 	}

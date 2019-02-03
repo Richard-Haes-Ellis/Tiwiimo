@@ -59,6 +59,7 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 	// Si se conecta al bus ui32Event se pondra a USB_EVENT_CONNECTED
 	case USB_EVENT_CONNECTED:
 	{
+		g_iMouseState = STATE_IDLE;
 		g_bConnected = true;
 		g_bSuspended = false;
 		break;
@@ -67,6 +68,7 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		// Si se desconecta al bus ui32Event se pondra a USB_EVENT_DISCONNECTED.
 	case USB_EVENT_DISCONNECTED:
 	{
+		g_iMouseState = STATE_UNCONFIGURED;
 		g_bConnected = false;
 		break;
 	}
@@ -175,7 +177,8 @@ int main(void)
 	bLastSuspend = false;
 
 	// Initialize the USB stack for device mode.
-	USBStackModeSet(0, eUSBModeForceDevice, 0);
+	// USBStackModeSet(0, eUSBModeForceDevice, 0);
+	USBStackModeSet(0, eUSBModeDevice,      0);
 
 	// Tell the USB library the CPU clock and the PLL frequency.  This is a
 	// new requirement for TM4C129 devices.
@@ -185,7 +188,7 @@ int main(void)
 
 	// Pass our device information to the USB HID device class driver,
 	// initialize the USB controller and connect the device to the bus.
-	USBDHIDMouseInit(0, &g_sMouseDevice);
+	USBDHIDMouseInit(0, (tUSBDHIDMouseDevice *)&g_sMouseDevice);
 
 	// Set the system tick to fire 100 times per second.
 	ROM_SysTickPeriodSet(ui32SysClock / SYSTICKS_PER_SECOND);
@@ -198,7 +201,6 @@ int main(void)
 	UARTprintf("*         usb-mouse	         *\n");
 	UARTprintf("******************************\n");
 
-	GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, 0);
 
 	// The main loop starts here.  We begin by waiting for a host connection
 	// then drop into the main keyboard handling section.  If the host
@@ -211,11 +213,16 @@ int main(void)
 		// Tell the user what we are doing and provide some basic instructions.
 		UARTprintf("\nWaiting For Host...\n");
 
+		// Indica que esta listo para enchufar
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0);
+
 		// Nos quedamos esperado si no esta conectado al host (PC)
 		while (!g_bConnected)
 		{
 		}
 
+		// Indica que esta listo para enchufar
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 1);
 		// Una vez connectada informamos por UART
 		UARTprintf("\nHost Connected...\n");
 
@@ -230,7 +237,7 @@ int main(void)
 		// En principio marcamos como bus no suspenso (Ya que nos acabamos de conectar)
 		bLastSuspend = false;
 
-		USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,MOUSE_REPORT_BUTTON_1);
+		// USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0, 0);
 
 		// Continuamos con nuestra logica de programa (Funcionnalidad del raton)
 		// mientras estamos conectados. Esta variable es manejada por el MouseHandler
@@ -260,11 +267,7 @@ int main(void)
 				int8_t yDistance = 0;
 
 
-				USBDHIDMouseStateChange((void *) &g_sMouseDevice, xDistance,
-											yDistance, MOUSE_REPORT_SIZE);
-
-				USBDHIDMouseStateChange((void *) &g_sMouseDevice, 0, 0,
-				MOUSE_REPORT_SIZE);
+				// USBDHIDMouseStateChange((void *) &g_sMouseDevice, xDistance,yDistance, 0);
 
 
 				// Comprobamos si los botones han sido pulsados
@@ -280,7 +283,7 @@ int main(void)
 					UARTprintf("Button DOWN (LEFT  CLICK) ON\n");
 					prevStateDo = 1;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_1;
+					butStat = MOUSE_REPORT_BUTTON_2;
 				}else if (!currStateDo && prevStateDo){
 					UARTprintf("Button DOWN (LEFT  CLICK) OFF\n");
 					prevStateDo = 0;
@@ -293,7 +296,7 @@ int main(void)
 					UARTprintf("Button UP   (RIGHT CLICK) ON\n");
 					prevStateUp = 1;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_2;
+					butStat = MOUSE_REPORT_BUTTON_1;
 				}else if (!currStateUp && prevStateUp){
 					UARTprintf("Button UP   (RIGHT CLICK) OFF\n");
 					prevStateUp = 0;

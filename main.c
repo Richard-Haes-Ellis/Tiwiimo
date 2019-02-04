@@ -11,7 +11,8 @@
 #include "utils/uartstdio.h"
 
 volatile uint32_t g_ui32SysTickCount;
-#define SYSTICKS_PER_SECOND     100
+uint32_t g_ui32PrevSysTickCount = 0;
+#define SYSTICKS_PER_SECOND     1000
 
 // =======================================================================
 // Function Declarations
@@ -20,7 +21,7 @@ volatile uint32_t g_ui32SysTickCount;
 
 void SysTickIntHandler(void)
 {
-    g_ui32SysTickCount++;
+    g_ui32SysTickCount++; // Actualiza cada 1 ms
 }
 
 int RELOJ;
@@ -30,25 +31,22 @@ void Timer0IntHandler(void);
 uint8_t Test_I2C_dir(uint32_t I2C_Base, uint8_t dir);
 
 
-char Cambia=0;
+char updateData=0;
 
 char string[50];
-int DevID=0;
+int  DevID=0;
 
 
  // BMI160/BMM150
  int8_t returnValue;
- struct bmi160_gyro_t        s_gyroXYZ;
+ struct bmi160_gyro_t s_gyroXYZ;
 
  //Calibration off-sets
  int16_t gyro_off_x = 6;
  int16_t gyro_off_y = -19;
  int16_t gyro_off_z = -19;
 
-
- int T_uncomp,T_comp;
-char mode;
-long int inicio, tiempo;
+long int inicio;
 
 volatile long int ticks=0;
 
@@ -86,7 +84,7 @@ int main(void) {
 
     UARTStdioConfig(0, 115200, RELOJ);
 
-    // Set the system tick to fire 100 times per second.
+    // Set the system tick to fire 1000 times per second.
         ROM_SysTickPeriodSet(ui32SysClock / SYSTICKS_PER_SECOND);
         ROM_SysTickIntEnable();
         ROM_SysTickEnable();
@@ -110,16 +108,11 @@ int main(void) {
         Bmi_OK=1;
     }
 
-    SysTickIntRegister(IntTick);
-    SysTickPeriodSet(12000);
-    SysTickIntEnable();
-    SysTickEnable();
 
     while(1)
     {
-        if(Cambia==1){
-            Cambia=0;
-            inicio=ticks;
+        if(g_ui32SysTickCount-g_ui32PrevSysTickCount > 10){ // Si ha pasado mas de 10 ms actualizamos
+            g_ui32PrevSysTickCount = g_ui32SysTickCount;
             if(Bmi_OK)
             {
                 bmi160_read_gyro_xyz(&s_gyroXYZ);
@@ -150,7 +143,6 @@ int main(void) {
 void Timer0IntHandler(void)
 {
 	TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT); //Borra flag
-	Cambia=1;
 }
 
 uint8_t Test_I2C_dir(uint32_t pos, uint8_t dir)

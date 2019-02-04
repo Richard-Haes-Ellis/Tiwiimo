@@ -56,10 +56,14 @@ int  DevID=0;
 int8_t returnValue;
 struct bmi160_gyro_t s_gyroXYZ;
 
-//Calibration off-sets
+// DATOS DE CALIBRACION
+// Offsets
 int16_t gyro_off_x = 6;
 int16_t gyro_off_y = -19;
 int16_t gyro_off_z = -19;
+// Escalados
+int32_t scaling = 5; // Rango [1,Inf] A mas valor mas atenuacion
+int32_t thresh  = 3; // Rangp [1,Inf] A mas valor menos sensible
 
 #define N 11 // TIENE QUE SER IMPAR!!
 int32_t xfilterBuff[N];
@@ -213,18 +217,23 @@ uint8_t Test_I2C_dir(uint32_t pos, uint8_t dir)
        return error;
 }
 
-int32_t medianValue(int32_t sensVal,int32_t buff[N]){
+int32_t medianValue(int32_t sensVal,int32_t values[N]){
 
     int8_t i=0;
     int8_t j=0;
 
+    int32_t buff[N];
     // Desplazamos todo a la izquierda
     for(i=0;i<N-1;i++){
-        buff[i] = buff[i+1];
+        values[i] = values[i+1];
     }
 
     // Introducimos el valor
-    buff[N-1] = sensVal;
+    values[N-1] = sensVal;
+
+    for(i=0;i<N;i++){
+        buff[i]=values[i];
+    }
 
     // Ordenamos el vector
     // En orden ascendente
@@ -240,10 +249,6 @@ int32_t medianValue(int32_t sensVal,int32_t buff[N]){
         }
     }
 
-    for(i = 0;i<N; i++){
-        UARTprintf("%d ",buff[i]);
-    }
-    UARTprintf(": %d \n",buff[(N+1)/2]);
     return buff[(N+1)/2];
 }
 
@@ -400,9 +405,6 @@ int main(void)
                         // ESCALARLO desde -32768 a 32767
                         // Lo hacemos por casting
 
-                        int32_t scaling = 1; // Rango [1,Inf] A mas valor mas atenuacion
-                        int32_t thresh  = 3; // Rangp [1,Inf] A mas valor menos sensible
-
                         if(xdata/scaling < thresh && xdata/scaling > -thresh){
                             yDistance = 0;
                         }else{
@@ -419,7 +421,7 @@ int main(void)
                         sprintf(string, "  GYRO: X:%6d\t Z:%6d\t\n",
                                                         (int8_t)xDistance,
                                                         (int8_t)yDistance);
-                        // UARTprintf(string);
+                        UARTprintf(string);
                     }
                 }
 

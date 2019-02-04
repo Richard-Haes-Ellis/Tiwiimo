@@ -62,10 +62,11 @@ int16_t gyro_off_x = 6;
 int16_t gyro_off_y = -19;
 int16_t gyro_off_z = -19;
 // Escalados
-int32_t scaling = 5; // Rango [1,Inf] A mas valor mas atenuacion
+int32_t scaling = 15; // Rango [1,Inf] A mas valor mas atenuacion
 int32_t thresh  = 3; // Rangp [1,Inf] A mas valor menos sensible
 
-#define N 11 // TIENE QUE SER IMPAR!!
+#define N 7         // Numero de muestras a filtrar
+#define filterType 1  // 1:Media // 0:MEDIANA
 int32_t xfilterBuff[N];
 int32_t yfilterBuff[N];
 
@@ -217,39 +218,62 @@ uint8_t Test_I2C_dir(uint32_t pos, uint8_t dir)
        return error;
 }
 
-int32_t medianValue(int32_t sensVal,int32_t values[N]){
+int32_t filter(int32_t sensVal, int32_t values[N], uint8_t type)
+{
 
-    int8_t i=0;
-    int8_t j=0;
-
+    int8_t i = 0;
+    int8_t j = 0;
     int32_t buff[N];
+    int32_t avg;
+
     // Desplazamos todo a la izquierda
-    for(i=0;i<N-1;i++){
-        values[i] = values[i+1];
+    for (i = 0; i < N - 1; i++)
+    {
+        values[i] = values[i + 1];
     }
 
     // Introducimos el valor
-    values[N-1] = sensVal;
+    values[N - 1] = sensVal;
 
-    for(i=0;i<N;i++){
-        buff[i]=values[i];
+    // Copiamos el vector
+    for (i = 0; i < N; i++)
+    {
+        buff[i] = values[i];
     }
 
-    // Ordenamos el vector
-    // En orden ascendente
-    for (i = 0; i < N; i++){
-        // Iteramos por cada elemnto
-        for (j = 0; j < N; j++){
-            // Y comprobamos si hay alguno mayor que ese
-            if (buff[j] > buff[i]){
-                int tmp = buff[i];  // Usamos una variable temporal
-                buff[i] = buff[j];  // Reemplazamos el valor
-                buff[j] = tmp;      // Reemplazamos el valor
+    if(type == 0){ // Filtro tipo mediana
+        // Ordenamos el vector
+        // En orden ascendente
+        for (i = 0; i < N; i++)
+        {
+            // Iteramos por cada elemnto
+            for (j = 0; j < N; j++)
+            {
+                // Y comprobamos si hay alguno mayor que ese
+                if (buff[j] > buff[i])
+                {
+                    int tmp = buff[i];  // Usamos una variable temporal
+                    buff[i] = buff[j];  // Reemplazamos el valor
+                    buff[j] = tmp;      // Reemplazamos el valor
+                }
             }
         }
+        if (N % 2 == 0)
+        {
+            return buff[N / 2];
+        }
+        else
+        {
+            return buff[(N + 1) / 2];
+        }
+    }else if(type ==1){ // Filtro tipo media
+        avg = 0;
+        for (i = 0; i < N; i++)
+        {
+            avg = avg + buff[i];
+        }
+        return avg / N;
     }
-
-    return buff[(N+1)/2];
 }
 
 
@@ -258,9 +282,8 @@ int main(void)
 	bool bLastSuspend;
 	uint32_t ui32SysClock;
 	uint32_t ui32PLLRate;
-
-
-	uint8_t xDistance = 0, yDistance = 0;
+	uint8_t xDistance = 0;
+	uint8_t yDistance = 0;
 
 	// Run from the PLL at 120 MHz.
 	ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
@@ -398,30 +421,34 @@ int main(void)
                         bmi160_read_gyro_xyz(&s_gyroXYZ);
 
                         // Filtramos los datos
-                        xdata = medianValue(s_gyroXYZ.x-gyro_off_x,xfilterBuff);
-                        ydata = medianValue(s_gyroXYZ.z-gyro_off_z,yfilterBuff);
+                        // Media
+                        xdata = filter(s_gyroXYZ.x-gyro_off_x,xfilterBuff,filterType);
+                        ydata = filter(s_gyroXYZ.z-gyro_off_z,yfilterBuff,filterType);
 
                         // QUE RANGO TOMA s_gyroXYX ----> 16 bits!!!
                         // ESCALARLO desde -32768 a 32767
                         // Lo hacemos por casting
 
-                        if(xdata/scaling < thresh && xdata/scaling > -thresh){
+                        if((xdata/scaling) < thresh && (xdata/scaling) > -thresh){
                             yDistance = 0;
                         }else{
-                            yDistance = -(int8_t)xdata/scaling;
+                            yDistance = -(int8_t)(xdata/scaling);
                         }
 
-                        if(ydata/scaling < thresh && ydata/scaling > -thresh){
+                        if((ydata/scaling) < thresh && (ydata/scaling) > -thresh){
                             xDistance = 0;
                         }else{
-                            xDistance = -(int8_t)ydata/scaling;
+                            xDistance = -(int8_t)(ydata/scaling);
                         }
                         movChange = 1;
-
-                        sprintf(string, "  GYRO: X:%6d\t Z:%6d\t\n",
-                                                        (int8_t)xDistance,
-                                                        (int8_t)yDistance);
-                        UARTprintf(string);
+                        sprintf(string, "%6d\t %6d\t %6d\t %6d\t %6d\t %6d;\t\n",
+                                s_gyroXYZ.x,
+                                xdata,
+                                xDistance,
+                                s_gyroXYZ.z,
+                                ydata,
+                                yDistance);
+                        UARTprintf(string);;
                     }
                 }
 

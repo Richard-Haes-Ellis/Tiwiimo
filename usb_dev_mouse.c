@@ -17,6 +17,7 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
 #include "driverlib/uart.h"
+
 // Libreria del puerto USB y dispositivos HID
 #include "usblib/usblib.h"
 #include "usblib/usbhid.h"
@@ -39,7 +40,7 @@
 
 // Flags de operacion
 volatile bool g_bConnected = false; // Varibale que indica si esta conectado a PC
-volatile bool g_bSuspended = false; // Variable que indica si se ha descconectado del bus USB
+volatile bool g_bSuspended = false; // Variable que indica si se ha desconectado del bus USB
 volatile uint32_t g_ui32SysTickCount;
 uint32_t g_ui32PrevSysTickCount = 0;
 
@@ -115,7 +116,7 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		break;
 	}
 
-		// Si se desconecta al bus ui32Event se pondra a USB_EVENT_DISCONNECTED.
+	    // Si se desconecta al bus ui32Event se pondra a USB_EVENT_DISCONNECTED.
 	case USB_EVENT_DISCONNECTED:
 	{
 		g_iMouseState = STATE_UNCONFIGURED;
@@ -365,7 +366,7 @@ int main(void)
 		// Tell the user what we are doing and provide some basic instructions.
 		UARTprintf("\nWaiting For Host...\n");
 
-		// Indica que esta listo para enchufar
+		// Indica que aun no esta listo para enchufar
 		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0);
 
 		// Nos quedamos esperado si no esta conectado al host (PC)
@@ -425,9 +426,8 @@ int main(void)
                         xdata = filter(s_gyroXYZ.x-gyro_off_x,xfilterBuff,filterType);
                         ydata = filter(s_gyroXYZ.z-gyro_off_z,yfilterBuff,filterType);
 
-                        // QUE RANGO TOMA s_gyroXYX ----> 16 bits!!!
-                        // ESCALARLO desde -32768 a 32767
-                        // Lo hacemos por casting
+                        // QUE RANGO TOMA s_gyroXYX ? ----> 16 bits!!!
+                        // Se DEBE escalar desde -32768 a 32767. Lo hacemos por casting
 
                         if((xdata/scaling) < thresh && (xdata/scaling) > -thresh){
                             yDistance = 0;
@@ -448,7 +448,7 @@ int main(void)
                                 s_gyroXYZ.z,
                                 ydata,
                                 yDistance);
-                        UARTprintf(string);;
+                        UARTprintf(string);
                     }
                 }
 
@@ -460,7 +460,7 @@ int main(void)
 
 				butChange = 0;
 
-				// Detectamos flancos de subida o bajada
+				// Detectamos flancos de (subida o) bajada
 				if (currStateDo && !prevStateDo){
 				    // UARTprintf("Button DOWN (LEFT  CLICK) ON\n");
 					prevStateDo = 1;
@@ -473,7 +473,7 @@ int main(void)
 					butStat = MOUSE_REPORT_BUTTON_RELEASE;
 				}
 
-				// Detectamos flancos de subida o bajada
+				// Detectamos flancos de subida (o bajada)
 				if (currStateUp && !prevStateUp){
 					// UARTprintf("Button UP   (RIGHT CLICK) ON\n");
 					prevStateUp = 1;
@@ -486,7 +486,7 @@ int main(void)
 					butStat = MOUSE_REPORT_BUTTON_RELEASE;
 				}
 
-				if(butChange || movChange){ // Solo cuando pulsamos oo dejamos de pulsar
+				if(butChange || movChange){ // Solo cuando pulsamos o dejamos de pulsar
 					// UARTprintf("Button change detected\n");
 					// Mandamos el reportaje al host.
 					g_iMouseState = STATE_SENDING;

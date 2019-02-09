@@ -35,11 +35,6 @@
 			<type>1</type>
 			<locationURI>SW_ROOT/examples/boards/ek-tm4c1294xl/drivers/pinout.c</locationURI>
 		</link>
-		<link>
-			<name>utils/uartstdio.c</name>
-			<type>1</type>
-			<locationURI>SW_ROOT/utils/uartstdio.c</locationURI>
-		</link>
 	</linkedResources>
 	<variableList>
 		<variable>

@@ -469,7 +469,7 @@ int main(void)
 				}else if (!currStateDo && prevStateDo){
 					// UARTprintf("Button DOWN (LEFT  CLICK) OFF\n");
 					prevStateDo = 0;
-					butChange   = 0;
+					butChange   = 1;
 					butStat = MOUSE_REPORT_BUTTON_RELEASE;
 				}
 

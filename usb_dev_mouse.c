@@ -69,7 +69,7 @@ int32_t scaling = 15; // Rango [1,Inf] A mas valor mas atenuacion
 int32_t thresh  = 3; // Rangp [1,Inf] A mas valor menos sensible
 
 #define N 7         // Numero de muestras a filtrar
-#define filterType 1  // 1:Media // 0:MEDIANA
+
 int32_t xfilterBuff[N];
 int32_t yfilterBuff[N];
 
@@ -221,17 +221,15 @@ uint8_t Test_I2C_dir(uint32_t pos, uint8_t dir)
        return error;
 }
 
-int32_t filter(int32_t sensVal, int32_t values[N], uint8_t type)
+int32_t filter(int32_t sensVal, int32_t values[N])
 {
-
     int8_t i = 0;
     int8_t j = 0;
     int32_t buff[N];
     int32_t avg;
 
     // Desplazamos todo a la izquierda
-    for (i = 0; i < N - 1; i++)
-    {
+    for (i = 0; i < N - 1; i++){
         values[i] = values[i + 1];
     }
 
@@ -239,44 +237,15 @@ int32_t filter(int32_t sensVal, int32_t values[N], uint8_t type)
     values[N - 1] = sensVal;
 
     // Copiamos el vector
-    for (i = 0; i < N; i++)
-    {
+    for (i = 0; i < N; i++){
         buff[i] = values[i];
     }
 
-    if(type == 0){ // Filtro tipo mediana
-        // Ordenamos el vector
-        // En orden ascendente
-        for (i = 0; i < N; i++)
-        {
-            // Iteramos por cada elemnto
-            for (j = 0; j < N; j++)
-            {
-                // Y comprobamos si hay alguno mayor que ese
-                if (buff[j] > buff[i])
-                {
-                    int tmp = buff[i];  // Usamos una variable temporal
-                    buff[i] = buff[j];  // Reemplazamos el valor
-                    buff[j] = tmp;      // Reemplazamos el valor
-                }
-            }
-        }
-        if (N % 2 == 0)
-        {
-            return buff[N / 2];
-        }
-        else
-        {
-            return buff[(N + 1) / 2];
-        }
-    }else if(type ==1){ // Filtro tipo media
-        avg = 0;
-        for (i = 0; i < N; i++)
-        {
-            avg = avg + buff[i];
-        }
-        return avg / N;
+    avg = 0;
+    for (i = 0; i < N; i++){
+        avg = avg + buff[i];
     }
+    return avg / N;
 }
 
 
@@ -425,8 +394,8 @@ int main(void)
 
                         // Filtramos los datos
                         // Media
-                        xdata = filter(s_gyroXYZ.x-gyro_off_x,xfilterBuff,filterType);
-                        ydata = filter(s_gyroXYZ.z-gyro_off_z,yfilterBuff,filterType);
+                        xdata = filter(s_gyroXYZ.x-gyro_off_x,xfilterBuff);
+                        ydata = filter(s_gyroXYZ.z-gyro_off_z,yfilterBuff);
 
                         // QUE RANGO TOMA s_gyroXYX ? ----> 16 bits!!!
                         // Se DEBE escalar desde -32768 a 32767. Lo hacemos por casting

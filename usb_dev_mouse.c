@@ -44,10 +44,8 @@ volatile bool g_bSuspended = false; // Variable que indica si se ha desconectado
 volatile uint32_t g_ui32SysTickCount;
 uint32_t g_ui32PrevSysTickCount = 0;
 
-#define MATLAB
-
-#define SYSTICKS_PER_SECOND     100
-#define MAX_SEND_DELAY          80
+#define SYSTICKS_PER_SECOND          100
+#define MAX_SEND_DELAY                80
 #define MOUSE_REPORT_BUTTON_RELEASE 0x00
 
 // Buffer para el UART
@@ -87,8 +85,7 @@ uint8_t movChange = 0;
 uint8_t butChange = 0;
 
 // Varibles de estado del raton
-volatile enum
-{
+volatile enum{
 	// Raton sin configurar
 	STATE_UNCONFIGURED,
 	// Nada que mandar y a la espera de datos
@@ -103,10 +100,7 @@ volatile enum
 g_iMouseState = STATE_UNCONFIGURED;
 
 // Runtina de manejo de eventos referidos al puerto USB
-uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
-							uint32_t ui32MsgData, void *pvMsgData)
-{
-
+uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,uint32_t ui32MsgData, void *pvMsgData){
 	switch (ui32Event)
 	{
 	// Si se conecta al bus ui32Event se pondra a USB_EVENT_CONNECTED
@@ -117,7 +111,6 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		g_bSuspended = false;
 		break;
 	}
-
 	    // Si se desconecta al bus ui32Event se pondra a USB_EVENT_DISCONNECTED.
 	case USB_EVENT_DISCONNECTED:
 	{
@@ -125,14 +118,12 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		g_bConnected = false;
 		break;
 	}
-
 		// Nos vamos al estado de espera despues de haber enviado informacion
 	case USB_EVENT_TX_COMPLETE:
 	{
 		g_iMouseState = STATE_IDLE;
 		break;
 	}
-
 		// Si se ha suspendido el bus USB ui32Event saltara al estado USB_EVENT_SUSPEND
 	case USB_EVENT_SUSPEND:
 	{
@@ -140,7 +131,6 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		g_bSuspended = true;
 		break;
 	}
-
 		// Si el bus se recupera volvemos al estado de IDLE
 	case USB_EVENT_RESUME:
 	{
@@ -148,7 +138,6 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		g_bSuspended = false;
 		break;
 	}
-
 		// Cualquier otro evento la ignoramos
 	default:
 	{
@@ -159,8 +148,7 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 	return (0);
 }
 
-void SysTickIntHandler(void)
-{
+void SysTickIntHandler(void){
 	g_ui32SysTickCount++;
 }
 
@@ -171,14 +159,9 @@ bool WaitForSendIdle(uint32_t ui32TimeoutTicks){
     ui32Start = g_ui32SysTickCount;
     ui32Elapsed = 0;
 
-    while(ui32Elapsed < ui32TimeoutTicks)
-    {
-        //
+    while(ui32Elapsed < ui32TimeoutTicks){
         // Is the mouse is idle or we have disconnected, return immediately.
-        //
-        if((g_iMouseState == STATE_IDLE) ||
-           (g_iMouseState == STATE_UNCONFIGURED))
-        {
+        if((g_iMouseState == STATE_IDLE) || (g_iMouseState == STATE_UNCONFIGURED)){
             return(true);
         }
 

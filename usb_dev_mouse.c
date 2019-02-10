@@ -44,6 +44,8 @@ volatile bool g_bSuspended = false; // Variable que indica si se ha desconectado
 volatile uint32_t g_ui32SysTickCount;
 uint32_t g_ui32PrevSysTickCount = 0;
 
+#define MATLAB
+
 #define SYSTICKS_PER_SECOND     100
 #define MAX_SEND_DELAY          80
 #define MOUSE_REPORT_BUTTON_RELEASE 0x00
@@ -383,9 +385,9 @@ int main(void)
 		g_iMouseState = STATE_IDLE;
 
 		// Declaramos variable de botones
-		uint8_t currStateDo,prevStateDo = 0;
-		uint8_t currStateUp,prevStateUp = 0;
-		uint8_t butStat = 0;
+		uint8_t currB1State,prevB1State = 0;
+		uint8_t currB2State,prevB2State = 0;
+		uint8_t butReport = 0;
 
 		// En principio marcamos como bus no suspenso (Ya que nos acabamos de conectar)
 		bLastSuspend = false;
@@ -441,6 +443,8 @@ int main(void)
                             xDistance = -(int8_t)(ydata/scaling);
                         }
                         movChange = 1;
+
+#ifdef MATLAB
                         sprintf(string, "%6d\t %6d\t %6d\t %6d\t %6d\t %6d;\t\n",
                                 s_gyroXYZ.x,
                                 xdata,
@@ -449,41 +453,42 @@ int main(void)
                                 ydata,
                                 yDistance);
                         UARTprintf(string);
+#endif
                     }
                 }
 
 				// Comprobamos si los botones han sido pulsados
 				ButtonsPoll(&ui8ButtonsChanged, &ui8Buttons);
 
-				currStateDo = (ui8Buttons & LEFT_BUTTON);
-				currStateUp = (ui8Buttons & RIGHT_BUTTON);
+				currB1State = (ui8Buttons & LEFT_BUTTON);
+				currB2State = (ui8Buttons & RIGHT_BUTTON);
 
 				butChange = 0;
 
 				// Detectamos flancos de (subida o) bajada
-				if (currStateDo && !prevStateDo){
+				if (currB1State && !prevB1State){
 				    // UARTprintf("Button DOWN (LEFT  CLICK) ON\n");
-					prevStateDo = 1;
+					prevB1State = 1;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_2;
-				}else if (!currStateDo && prevStateDo){
+					butReport = MOUSE_REPORT_BUTTON_2;
+				}else if (!currB1State && prevB1State){
 					// UARTprintf("Button DOWN (LEFT  CLICK) OFF\n");
-					prevStateDo = 0;
+					prevB1State = 0;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_RELEASE;
+					butReport = MOUSE_REPORT_BUTTON_RELEASE;
 				}
 
 				// Detectamos flancos de subida (o bajada)
-				if (currStateUp && !prevStateUp){
+				if (currB2State && !prevB2State){
 					// UARTprintf("Button UP   (RIGHT CLICK) ON\n");
-					prevStateUp = 1;
+					prevB2State = 1;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_1;
-				}else if (!currStateUp && prevStateUp){
+					butReport = MOUSE_REPORT_BUTTON_1;
+				}else if (!currB2State && prevB2State){
 					// UARTprintf("Button UP   (RIGHT CLICK) OFF\n");
-					prevStateUp = 0;
+					prevB2State = 0;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_RELEASE;
+					butReport = MOUSE_REPORT_BUTTON_RELEASE;
 				}
 
 				if(butChange || movChange){ // Solo cuando pulsamos o dejamos de pulsar
@@ -495,11 +500,11 @@ int main(void)
 					uint8_t  bSuccess = 0;
 					uint32_t numAtemp = 0;
 
-					// UARTprintf("Button stat is: %d\n",butStat);
+					// UARTprintf("Button stat is: %d\n",butReport);
 
 					while(!bSuccess && numAtemp < 60000){
 						numAtemp++;
-						ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,xDistance,yDistance,butStat);
+						ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,xDistance,yDistance,butReport);
 
 
 						if (ui32Retcode == MOUSE_SUCCESS){
@@ -512,7 +517,7 @@ int main(void)
 								// UARTprintf("Timout de envio\n");
 								g_bConnected = 0;
 							}
-							// UARTprintf("Reporte enviado %d,%d\n",numAtemp,butStat);
+							// UARTprintf("Reporte enviado %d,%d\n",numAtemp,butReport);
 						}else{
 							// Error al mandar reporte ignoramos petcion e informamos
 							// UARTprintf("No ha sido posible enviar reporte.\n");

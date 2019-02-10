@@ -194,18 +194,5 @@ Net gpio_keypad_GPIO2_IO_O_pin<3> LOC=E18 | IOSTANDARD=LVCMOS33; #COL1
     \end{tabular}    \caption{Set de instrucciones del microprocesador}
     \end{table}
 
-\begin{minted}[obeytabs,linenos,firstnumber=1,frame=leftline]{vhdl}
-constant ROM : rom_type := (0=> LDA_DIR,
-			    1=> x"F0",
-			    2=> LDB_DIR,
-			    3=> x"F1",
-			    4=> ADD_AB, -- Put the result in regA
-			    5=> STA_DIR,
-			    6=> x"E0",
-			    7=> BRA,
-			    8=> x"00",
-			    others => x"00");
-\end{minted}
-
 
 \end{document}

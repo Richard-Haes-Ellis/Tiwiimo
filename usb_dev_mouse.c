@@ -63,10 +63,10 @@ int16_t gyro_off_x = 6;
 int16_t gyro_off_y = -19;
 int16_t gyro_off_z = -19;
 // Escalados
-int32_t scaling = 15; // Rango [1,Inf] A mas valor mas atenuacion
-int32_t thresh  = 3; // Rangp [1,Inf] A mas valor menos sensible
+int32_t scaling = 23; // Rango [1,Inf] A mas valor mas atenuacion
+int32_t thresh  = 2; // Rangp [1,Inf] A mas valor menos sensible
 
-#define N 7         // Numero de muestras a filtrar
+#define N 3         // Numero de muestras a filtrar
 
 int32_t xfilterBuff[N];
 int32_t yfilterBuff[N];
@@ -311,7 +311,8 @@ int main(void)
 
 	// The main loop starts here.  We begin by waiting for a host connection
 	// then drop into the main keyboard handling section.  If the host
-	// disconnects, we return to the top and wait for a new connection.
+	// disconnects, we return to the top and wait for a new connection
+    // Esperamos
 	while (1)
 	{
 		uint8_t ui8Buttons;

@@ -182,7 +182,7 @@ La variacion del angulo en torno al eje Z se medira del mismo modo, como se mues
 \newpage
 La comunicacion del sensor con otros sensores del boosterpack y con la placa sera por medio de $I^2C$, el cual es el principal bus serie de datos, empleado para la comunicacion entre elementos de un circuito. \\
 
-<<<<<<< HEAD
+
 Al igual que antes, se puede consultar datos concretos de cada sensor en la guia proporcionada por el fabricante:
 \url{http://www.ti.com/lit/ug/slau666b/slau666b.pdf}
 
@@ -193,57 +193,6 @@ En cuanto al software empleado se basara en la API proporcionada por el fabrican
  \includegraphics[width=.8\textwidth]{../images/tivaware_struct}
  \caption{Estructura de la API Tivaware}
 \end{figure}
-=======
-\begin{verbatim}
-# KeyPad Digilent Adept Conexions
-#Input
-Net gpio_keypad_GPIO_IO_I_pin<0> LOC=K12 | IOSTANDARD=LVCMOS33; #ROW4
-Net gpio_keypad_GPIO_IO_I_pin<1> LOC=K13 | IOSTANDARD=LVCMOS33; #ROW3
-Net gpio_keypad_GPIO_IO_I_pin<2> LOC=F17 | IOSTANDARD=LVCMOS33; #ROW2
-Net gpio_keypad_GPIO_IO_I_pin<3> LOC=F18 | IOSTANDARD=LVCMOS33; #ROW1
-#Output
-Net gpio_keypad_GPIO2_IO_O_pin<0> LOC=H12 | IOSTANDARD=LVCMOS33; #COL4
-Net gpio_keypad_GPIO2_IO_O_pin<1> LOC=G13 | IOSTANDARD=LVCMOS33; #COL3
-Net gpio_keypad_GPIO2_IO_O_pin<2> LOC=E16 | IOSTANDARD=LVCMOS33; #COL2
-Net gpio_keypad_GPIO2_IO_O_pin<3> LOC=E18 | IOSTANDARD=LVCMOS33; #COL1
-\end{verbatim}
-
-\begin{table}[h!]
-    \centering
-    \begin{tabular}{|l|l|l|l|}
-    \hline
-     &\multicolumn{1}{c|}{Instrucción} & {Operator Code} & {Descripción} \\
-     \hline \hline
-    \multirow{6}{*}{\textit{Load and Stores}} & LDA\_IMM  & x"86",<data> & Carga con direccionamiento inmediato \\ \cline{2-4}
-                            								  & LDA\_DIR  & x"87",<addr> & Carga con direccionamiento directo \\ \cline{2-4}
-                            								  & LDB\_IMM  & x"88",<data> & Carga con direccionamiento inmediato \\ \cline{2-4}
-                            								  & LDB\_DIR  & x"89",<addr> & Carga con direccionamiento directo \\ \cline{2-4}
-																						  & STA\_DIR  & x"96",<addr> & Almacena dato en registro A \\ \cline{2-4}
-																							& STB\_DIR  & x"97",<addr> & Almacena dato en registro B \\ \cline{2-4}
-																							\hline
-	\multirow{8}{*}{\textit{Data Manipulations}} & ADD\_AB  & x"42" & A=A+B \\ \cline{2-4}
-	                         								     & SUB\_AB  & x"43" & A=A-B \\ \cline{2-4}
-																					  & AND\_AB  & x"44" &  A = A \& B \\ \cline{2-4}
-																					  & OR\_AB  & x"45" &  A=A | B \\ \cline{2-4}
-																						& INCA  & x"46" &   A=A+1 \\ \cline{2-4}
-																						& INCB  & x"47" &  B=B+1 \\ \cline{2-4}
-																						& DECA  & x"48" &  A=A-1 \\ \cline{2-4}
-																						& DECB  & x"49" &  B=B-1 \\ \cline{2-4}
-																							\hline
- \multirow{9}{*}{\textit{Branches}}  & BRA  & x"20",<addr> & Branch siempre \\ \cline{2-4}
-                          					 & BMI  & x"21",<addr> & Branch si N=1 \\ \cline{2-4}
-																		 & BPL  & x"22",<addr> & Branch si N=0 \\ \cline{2-4}
-																		 & BEQ  & x"23",<addr> & Branch si Z=1 \\ \cline{2-4}
-																	   & BNE  & x"24",<addr> & Branch si Z=0 \\ \cline{2-4}
-																		 & BVS  & x"25",<addr> & Branch si V=1 \\ \cline{2-4}
-																		 & BVC  & x"26",<addr> & Branch si V=0 \\ \cline{2-4}
-																		 & BCS  & x"27",<addr> & Branch si C=1 \\ \cline{2-4}
-																	   & BCC  & x"28",<addr> & Branch si C=0 \\ \cline{2-4}
-																		 	\hline
-    \end{tabular}    \caption{Set de instrucciones del microprocesador}
-    \end{table}
-
->>>>>>> 94616271741b9c70a6ba9afa412b2d6454d5cee5
 
 Principalmente, se emplearan las liberias asociadas al manejo de los perifericos, \textit{Peripheral Driver Library}, al manejo del puerto USB,\textit{USB Library} y al manejo de sensores,\textit{Sensor Library}. \\
 Ademas de la gran ayuda brinda la API, se proporcionan una serie de ejemplos de uso que ayudaran al desarrollo del software propio. \\

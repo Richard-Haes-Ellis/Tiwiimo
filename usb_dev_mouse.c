@@ -44,8 +44,8 @@ volatile bool g_bSuspended = false; // Variable que indica si se ha desconectado
 volatile uint32_t g_ui32SysTickCount;
 uint32_t g_ui32PrevSysTickCount = 0;
 
-#define SYSTICKS_PER_SECOND     100
-#define MAX_SEND_DELAY          80
+#define SYSTICKS_PER_SECOND          100
+#define MAX_SEND_DELAY                80
 #define MOUSE_REPORT_BUTTON_RELEASE 0x00
 
 // Buffer para el UART
@@ -63,11 +63,11 @@ int16_t gyro_off_x = 6;
 int16_t gyro_off_y = -19;
 int16_t gyro_off_z = -19;
 // Escalados
-int32_t scaling = 15; // Rango [1,Inf] A mas valor mas atenuacion
-int32_t thresh  = 3; // Rangp [1,Inf] A mas valor menos sensible
+int32_t scaling = 23; // Rango [1,Inf] A mas valor mas atenuacion
+int32_t thresh  = 2; // Rangp [1,Inf] A mas valor menos sensible
 
-#define N 7         // Numero de muestras a filtrar
-#define filterType 1  // 1:Media // 0:MEDIANA
+#define N 3         // Numero de muestras a filtrar
+
 int32_t xfilterBuff[N];
 int32_t yfilterBuff[N];
 
@@ -85,8 +85,7 @@ uint8_t movChange = 0;
 uint8_t butChange = 0;
 
 // Varibles de estado del raton
-volatile enum
-{
+volatile enum{
 	// Raton sin configurar
 	STATE_UNCONFIGURED,
 	// Nada que mandar y a la espera de datos
@@ -101,10 +100,7 @@ volatile enum
 g_iMouseState = STATE_UNCONFIGURED;
 
 // Runtina de manejo de eventos referidos al puerto USB
-uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
-							uint32_t ui32MsgData, void *pvMsgData)
-{
-
+uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,uint32_t ui32MsgData, void *pvMsgData){
 	switch (ui32Event)
 	{
 	// Si se conecta al bus ui32Event se pondra a USB_EVENT_CONNECTED
@@ -115,7 +111,6 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		g_bSuspended = false;
 		break;
 	}
-
 	    // Si se desconecta al bus ui32Event se pondra a USB_EVENT_DISCONNECTED.
 	case USB_EVENT_DISCONNECTED:
 	{
@@ -123,14 +118,12 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		g_bConnected = false;
 		break;
 	}
-
 		// Nos vamos al estado de espera despues de haber enviado informacion
 	case USB_EVENT_TX_COMPLETE:
 	{
 		g_iMouseState = STATE_IDLE;
 		break;
 	}
-
 		// Si se ha suspendido el bus USB ui32Event saltara al estado USB_EVENT_SUSPEND
 	case USB_EVENT_SUSPEND:
 	{
@@ -138,7 +131,6 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		g_bSuspended = true;
 		break;
 	}
-
 		// Si el bus se recupera volvemos al estado de IDLE
 	case USB_EVENT_RESUME:
 	{
@@ -146,7 +138,6 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 		g_bSuspended = false;
 		break;
 	}
-
 		// Cualquier otro evento la ignoramos
 	default:
 	{
@@ -157,8 +148,7 @@ uint32_t HIDMouseHandler(void *pvCBData, uint32_t ui32Event,
 	return (0);
 }
 
-void SysTickIntHandler(void)
-{
+void SysTickIntHandler(void){
 	g_ui32SysTickCount++;
 }
 
@@ -169,14 +159,9 @@ bool WaitForSendIdle(uint32_t ui32TimeoutTicks){
     ui32Start = g_ui32SysTickCount;
     ui32Elapsed = 0;
 
-    while(ui32Elapsed < ui32TimeoutTicks)
-    {
-        //
+    while(ui32Elapsed < ui32TimeoutTicks){
         // Is the mouse is idle or we have disconnected, return immediately.
-        //
-        if((g_iMouseState == STATE_IDLE) ||
-           (g_iMouseState == STATE_UNCONFIGURED))
-        {
+        if((g_iMouseState == STATE_IDLE) || (g_iMouseState == STATE_UNCONFIGURED)){
             return(true);
         }
 
@@ -219,17 +204,15 @@ uint8_t Test_I2C_dir(uint32_t pos, uint8_t dir)
        return error;
 }
 
-int32_t filter(int32_t sensVal, int32_t values[N], uint8_t type)
+int32_t filter(int32_t sensVal, int32_t values[N])
 {
-
     int8_t i = 0;
     int8_t j = 0;
     int32_t buff[N];
     int32_t avg;
 
     // Desplazamos todo a la izquierda
-    for (i = 0; i < N - 1; i++)
-    {
+    for (i = 0; i < N - 1; i++){
         values[i] = values[i + 1];
     }
 
@@ -237,44 +220,15 @@ int32_t filter(int32_t sensVal, int32_t values[N], uint8_t type)
     values[N - 1] = sensVal;
 
     // Copiamos el vector
-    for (i = 0; i < N; i++)
-    {
+    for (i = 0; i < N; i++){
         buff[i] = values[i];
     }
 
-    if(type == 0){ // Filtro tipo mediana
-        // Ordenamos el vector
-        // En orden ascendente
-        for (i = 0; i < N; i++)
-        {
-            // Iteramos por cada elemnto
-            for (j = 0; j < N; j++)
-            {
-                // Y comprobamos si hay alguno mayor que ese
-                if (buff[j] > buff[i])
-                {
-                    int tmp = buff[i];  // Usamos una variable temporal
-                    buff[i] = buff[j];  // Reemplazamos el valor
-                    buff[j] = tmp;      // Reemplazamos el valor
-                }
-            }
-        }
-        if (N % 2 == 0)
-        {
-            return buff[N / 2];
-        }
-        else
-        {
-            return buff[(N + 1) / 2];
-        }
-    }else if(type ==1){ // Filtro tipo media
-        avg = 0;
-        for (i = 0; i < N; i++)
-        {
-            avg = avg + buff[i];
-        }
-        return avg / N;
+    avg = 0;
+    for (i = 0; i < N; i++){
+        avg = avg + buff[i];
     }
+    return avg / N;
 }
 
 
@@ -357,7 +311,8 @@ int main(void)
 
 	// The main loop starts here.  We begin by waiting for a host connection
 	// then drop into the main keyboard handling section.  If the host
-	// disconnects, we return to the top and wait for a new connection.
+	// disconnects, we return to the top and wait for a new connection
+    // Esperamos
 	while (1)
 	{
 		uint8_t ui8Buttons;
@@ -383,9 +338,9 @@ int main(void)
 		g_iMouseState = STATE_IDLE;
 
 		// Declaramos variable de botones
-		uint8_t currStateDo,prevStateDo = 0;
-		uint8_t currStateUp,prevStateUp = 0;
-		uint8_t butStat = 0;
+		uint8_t currB1State,prevB1State = 0;
+		uint8_t currB2State,prevB2State = 0;
+		uint8_t butReport = 0;
 
 		// En principio marcamos como bus no suspenso (Ya que nos acabamos de conectar)
 		bLastSuspend = false;
@@ -423,8 +378,8 @@ int main(void)
 
                         // Filtramos los datos
                         // Media
-                        xdata = filter(s_gyroXYZ.x-gyro_off_x,xfilterBuff,filterType);
-                        ydata = filter(s_gyroXYZ.z-gyro_off_z,yfilterBuff,filterType);
+                        xdata = filter(s_gyroXYZ.x-gyro_off_x,xfilterBuff);
+                        ydata = filter(s_gyroXYZ.z-gyro_off_z,yfilterBuff);
 
                         // QUE RANGO TOMA s_gyroXYX ? ----> 16 bits!!!
                         // Se DEBE escalar desde -32768 a 32767. Lo hacemos por casting
@@ -441,6 +396,8 @@ int main(void)
                             xDistance = -(int8_t)(ydata/scaling);
                         }
                         movChange = 1;
+
+#ifdef MATLAB
                         sprintf(string, "%6d\t %6d\t %6d\t %6d\t %6d\t %6d;\t\n",
                                 s_gyroXYZ.x,
                                 xdata,
@@ -449,41 +406,42 @@ int main(void)
                                 ydata,
                                 yDistance);
                         UARTprintf(string);
+#endif
                     }
                 }
 
 				// Comprobamos si los botones han sido pulsados
 				ButtonsPoll(&ui8ButtonsChanged, &ui8Buttons);
 
-				currStateDo = (ui8Buttons & LEFT_BUTTON);
-				currStateUp = (ui8Buttons & RIGHT_BUTTON);
+				currB1State = (ui8Buttons & LEFT_BUTTON);
+				currB2State = (ui8Buttons & RIGHT_BUTTON);
 
 				butChange = 0;
 
 				// Detectamos flancos de (subida o) bajada
-				if (currStateDo && !prevStateDo){
+				if (currB1State && !prevB1State){
 				    // UARTprintf("Button DOWN (LEFT  CLICK) ON\n");
-					prevStateDo = 1;
+					prevB1State = 1;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_2;
-				}else if (!currStateDo && prevStateDo){
+					butReport = MOUSE_REPORT_BUTTON_2;
+				}else if (!currB1State && prevB1State){
 					// UARTprintf("Button DOWN (LEFT  CLICK) OFF\n");
-					prevStateDo = 0;
+					prevB1State = 0;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_RELEASE;
+					butReport = MOUSE_REPORT_BUTTON_RELEASE;
 				}
 
 				// Detectamos flancos de subida (o bajada)
-				if (currStateUp && !prevStateUp){
+				if (currB2State && !prevB2State){
 					// UARTprintf("Button UP   (RIGHT CLICK) ON\n");
-					prevStateUp = 1;
+					prevB2State = 1;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_1;
-				}else if (!currStateUp && prevStateUp){
+					butReport = MOUSE_REPORT_BUTTON_1;
+				}else if (!currB2State && prevB2State){
 					// UARTprintf("Button UP   (RIGHT CLICK) OFF\n");
-					prevStateUp = 0;
+					prevB2State = 0;
 					butChange   = 1;
-					butStat = MOUSE_REPORT_BUTTON_RELEASE;
+					butReport = MOUSE_REPORT_BUTTON_RELEASE;
 				}
 
 				if(butChange || movChange){ // Solo cuando pulsamos o dejamos de pulsar
@@ -495,11 +453,11 @@ int main(void)
 					uint8_t  bSuccess = 0;
 					uint32_t numAtemp = 0;
 
-					// UARTprintf("Button stat is: %d\n",butStat);
+					// UARTprintf("Button stat is: %d\n",butReport);
 
 					while(!bSuccess && numAtemp < 60000){
 						numAtemp++;
-						ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,xDistance,yDistance,butStat);
+						ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,xDistance,yDistance,butReport);
 
 
 						if (ui32Retcode == MOUSE_SUCCESS){
@@ -512,7 +470,7 @@ int main(void)
 								// UARTprintf("Timout de envio\n");
 								g_bConnected = 0;
 							}
-							// UARTprintf("Reporte enviado %d,%d\n",numAtemp,butStat);
+							// UARTprintf("Reporte enviado %d,%d\n",numAtemp,butReport);
 						}else{
 							// Error al mandar reporte ignoramos petcion e informamos
 							// UARTprintf("No ha sido posible enviar reporte.\n");

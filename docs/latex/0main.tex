@@ -1,4 +1,4 @@
-\documentclass[a4paper,twoside]{article}
+ \documentclass[a4paper,twoside]{article}
 
 %% Language and font encodings
 \usepackage[spanish]{babel}
@@ -101,9 +101,9 @@
 %Nos generará texto para pruebas de maquetado
 \usepackage{lipsum}
 
-% To include VHDL code
-%\usepackage{minted}
-
+% To include code
+\usepackage{minted}
+%\usemintedstyle{borland}
 % To can use multirow
 \usepackage{multirow}
 
@@ -265,7 +265,68 @@ Debido a que la comunicacion con el ESP01 es UART, para establecer una comunicac
 \newpage
 
 \section{Anexos}
+\begin{minted}[linenos,breaklines,bgcolor=lightgray,frame=lines,framesep=2mm]{c}
+// Detectamos flancos de (subida o) bajada
+if (currB1State && !prevB1State){
+    // UARTprintf("Button DOWN (LEFT  CLICK) ON\n");
+  prevB1State = 1;
+  butChange   = 1;
+  butReport = MOUSE_REPORT_BUTTON_2;
+}else if (!currB1State && prevB1State){
+  // UARTprintf("Button DOWN (LEFT  CLICK) OFF\n");
+  prevB1State = 0;
+  butChange   = 1;
+  butReport = MOUSE_REPORT_BUTTON_RELEASE;
+}
 
+// Detectamos flancos de subida (o bajada)
+if (currB2State && !prevB2State){
+  // UARTprintf("Button UP   (RIGHT CLICK) ON\n");
+  prevB2State = 1;
+  butChange   = 1;
+  butReport = MOUSE_REPORT_BUTTON_1;
+}else if (!currB2State && prevB2State){
+  // UARTprintf("Button UP   (RIGHT CLICK) OFF\n");
+  prevB2State = 0;
+  butChange   = 1;
+  butReport = MOUSE_REPORT_BUTTON_RELEASE;
+}
+
+if(butChange || movChange){ // Solo cuando pulsamos o dejamos de pulsar
+  // UARTprintf("Button change detected\n");
+  // Mandamos el reportaje al host.
+  g_iMouseState = STATE_SENDING;
+
+  uint32_t ui32Retcode = 0;
+  uint8_t  bSuccess = 0;
+  uint32_t numAtemp = 0;
+
+					while(!bSuccess && numAtemp < 60000){
+						numAtemp++;
+						ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,xDistance,yDistance,butReport);
+
+
+						if (ui32Retcode == MOUSE_SUCCESS){
+							// Esperamos a que el host reciba el reportaje si ha ido bien
+							bSuccess = WaitForSendIdle(MAX_SEND_DELAY);
+
+							// Se ha acabado el tiempo y no se ha puesto en IDLE?
+							if (!bSuccess){
+								// Asumimos que el host se ha desconectado
+								// UARTprintf("Timout de envio\n");
+								g_bConnected = 0;
+							}
+							// UARTprintf("Reporte enviado %d,%d\n",numAtemp,butReport);
+						}else{
+							// Error al mandar reporte ignoramos petcion e informamos
+							// UARTprintf("No ha sido posible enviar reporte.\n");
+							bSuccess = false;
+						}
+					}
+					butChange = 0;
+					movChange = 0;
+				}
+\end{minted}
 
 \begin{lstlisting}[language=C,style=CStyle, caption={Declaración e inicialización de variables}]
 

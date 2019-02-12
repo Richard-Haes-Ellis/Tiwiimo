@@ -59,6 +59,8 @@ extern uint32_t __STACK_TOP;
 extern void SysTickIntHandler(void);
 extern void UARTStdioIntHandler(void);
 extern void USB0DeviceIntHandler(void);
+//extern void UARTIntHandler(void);
+extern void UART1IntHandler(void);
 
 //*****************************************************************************
 //
@@ -67,6 +69,9 @@ extern void USB0DeviceIntHandler(void);
 // the program if located at a start address other than 0.
 //
 //*****************************************************************************
+
+UARTIntHandler,                         // UART0 Rx and Tx
+                          // UART1 Rx and Tx
 #pragma DATA_SECTION(g_pfnVectors, ".intvecs")
 void (* const g_pfnVectors[])(void) =
 {
@@ -92,8 +97,8 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E
-    UARTStdioIntHandler,                    // UART0 Rx and Tx
-    IntDefaultHandler,                      // UART1 Rx and Tx
+    UARTStdioIntHandler,//UART1IntHandler                    // UART0 Rx and Tx
+    UART1IntHandler,                      // UART1 Rx and Tx
     IntDefaultHandler,                      // SSI0 Rx and Tx
     IntDefaultHandler,                      // I2C0 Master and Slave
     IntDefaultHandler,                      // PWM Fault

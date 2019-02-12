@@ -56,10 +56,10 @@ extern uint32_t __STACK_TOP;
 // External declarations for the interrupt handlers used by the application.
 //
 //*****************************************************************************;
-extern void SysTickIntHandler(void);
-extern void UARTStdioIntHandler(void);
-extern void USB0DeviceIntHandler(void);
-//extern void UARTIntHandler(void);
+//extern void SysTickIntHandler(void);
+//extern void UARTStdioIntHandler(void);
+//extern void USB0DeviceIntHandler(void);
+extern void UARTIntHandler(void);
 extern void UART1IntHandler(void);
 
 //*****************************************************************************
@@ -70,8 +70,6 @@ extern void UART1IntHandler(void);
 //
 //*****************************************************************************
 
-UARTIntHandler,                         // UART0 Rx and Tx
-                          // UART1 Rx and Tx
 #pragma DATA_SECTION(g_pfnVectors, ".intvecs")
 void (* const g_pfnVectors[])(void) =
 {
@@ -91,13 +89,13 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
     IntDefaultHandler,                      // The PendSV handler
-	SysTickIntHandler,                      // The SysTick handler
+    IntDefaultHandler,                      // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
     IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E
-    UARTStdioIntHandler,//UART1IntHandler                    // UART0 Rx and Tx
+    UARTIntHandler, //UART1IntHandler             // UART0 Rx and Tx
     UART1IntHandler,                      // UART1 Rx and Tx
     IntDefaultHandler,                      // SSI0 Rx and Tx
     IntDefaultHandler,                      // I2C0 Master and Slave
@@ -134,7 +132,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // CAN1
     IntDefaultHandler,                      // Ethernet
     IntDefaultHandler,                      // Hibernate
-    USB0DeviceIntHandler,                   // USB0
+    IntDefaultHandler,                   // USB0
     IntDefaultHandler,                      // PWM Generator 3
     IntDefaultHandler,                      // uDMA Software Transfer
     IntDefaultHandler,                      // uDMA Error

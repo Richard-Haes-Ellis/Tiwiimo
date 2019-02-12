@@ -143,13 +143,13 @@ UART1IntHandler(void)
     //
     // Loop while there are characters in the receive FIFO.
     //
+    unsigned char j=0;
     while(UARTCharsAvail(UART1_BASE))
     {
-        //
-        // Read the next character from the UART and write it back to the UART.
-        //
-        UARTCharPutNonBlocking(UART1_BASE,UARTCharGetNonBlocking(UART1_BASE));
 
+        // Read the next character from the UART and write it back to the UART.
+        UART1read[j]=(uint8_t)UARTCharGetNonBlocking(UART1_BASE);
+        j++;
         //
         // Blink the LED to show a character transfer is occuring.
         //
@@ -270,22 +270,33 @@ main(void)
     //
     // Prompt for text to be entered.
     //
-    UARTSend((uint8_t *)"\033[2JEnter text: ", 16);
-    UART1Send((uint8_t *)"AT+RST\0", 8);
+    UARTSend((uint8_t *)"\033[2JUART0: ", 11);
+    UART1Send((uint8_t *)"\033[2JUART1: ", 11);
 
     //
     // Loop forever echoing data through the UART.
     //
     while(1)
     {
-        //UART1Send((uint8_t *)"AT+RST\0", 8);
-
+        //Se manda a la UART1 lo escrito por la UART0(Debug)
         if (UART0read[0]!=0){
             uint32_t sizeBuff = 0;
             while(UART0read[sizeBuff]!=0){sizeBuff++;}
-            UARTSend( UART0read, sizeBuff);
+            UART1Send( UART0read, sizeBuff);
             uint32_t i = 0;
             while(i<N){UART0read[i]=0;i++;}
         }
+
+        {
+            //Se manda a la UART0(Debug) lo escrito por la UART1
+            if (UART1read[0]!=0){
+                uint32_t sizeBuff = 0;
+                while(UART1read[sizeBuff]!=0){sizeBuff++;}
+                UARTSend( UART1read, sizeBuff);
+                uint32_t i = 0;
+                while(i<N){UART1read[i]=0;i++;}
+            }
+
+    }
     }
 }

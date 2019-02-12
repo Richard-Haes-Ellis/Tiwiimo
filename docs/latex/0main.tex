@@ -233,12 +233,27 @@ En primer lugar, es conveniente mistrar un esquema de las librerias y funciones 
 
 \newpage
 Em el codigo principal, es decir, en \textit{usb\_dev\_mouse.c}, en primer lugar se hara la declaracion de librerias. Las primeras librerias que se declararan son las asociadas a las funciones logicas del microntrolador.
-\begin{lstlisting}[language=C,style=CStyle, caption={Inclusion de librerias}]
-// Librerias
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-\end{lstlisting}
+
+\begin{listing}[h!]
+\inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/variables.c}
+\caption{Variables y defines del codigo}
+\end{listing}
+
+\begin{listing}[h!]
+\inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/librerias.c}
+\caption{Declaración de librerías}
+\end{listing}
+
+\begin{listing}[h!]
+\inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/funciones.c}
+\caption{Funciones empleadas}
+\end{listing}
+
+\begin{listing}[h!]
+\inputminted[linenos,breaklines,bgcolor=lightgray,frame=lines,framesep=2mm]{c}{codes/main.c}
+\caption{Programa principal}
+\end{listing}
+
 
 \newpage
 \section{Posibles mejoras del proyecto}
@@ -260,73 +275,14 @@ En cuando a la principal mejora del proyecto, se basara en la implementacion de 
 \end{itemize}
 
 Esta ultima via de comunicacion, es la que se ha considerado mas factible ya que los modulos ESP01 emplean comandos AT, es decir, el conjunto de comandos Hayes, los cuales son un conjunto de comandos empleados para configurar y parametrizar los modems. \\
-Debido a que la comunicacion con el ESP01 es UART, para establecer una comunicacion con `el seria necesario, ademas de todo el entramado de conexiones de red, enviar comandos por comunicacion serial. Sin embargo, no se ha optado por implementarlo en este proyecto, debido a la necesidad del uso de los objetos inherentes al lenguaje de programacion C++ y sus clases.
+La comunicacion del modulo ESP01 es mediante UART(\textit{Universal Asynchronous Receiver-Transmitter}), y debido a que el microntrolador posee 8 puertos UART, es una aplicación bastante factible. Empleando las funciones para enviar datos por la UART en función de la dirección base de la misma, las cuales se encuentran ya diseñadas en el directorio raiz de este proyecto, seria posible establecer una comunicacion serial con el modulo Wi-Fi. Sin embargo, una vez establecida dicha comunicación serial, la cual conlleva consigo una sincronizacion de relojes entre las UART y la comunicación USB para implementar el dispositivo. \\
+Una vez establecida esta comunicación, es necesario trazar un entramado de conexiones de red para crear un servidor TCP en el ESP01 a modo de punto de acceso al cual se pueda conectar el otro, el cual se encuentra en el otro microcontrolador, de tal modo que le envíe los datos por tramas TCP asociados a la IMU y la pulsación de los botones.\\
+
+No se ha optado por implementarlo en este proyecto, debido a la necesidad del uso de los objetos inherentes al lenguaje de programacion C++ y sus clases para establecer un buen entramado de conexiones de red. Además de ello presentó una notable carga de tiempo de trabajo la sincronización de los relojes. \\
 
 \newpage
 
 \section{Anexos}
-\begin{minted}[linenos,breaklines,bgcolor=lightgray,frame=lines,framesep=2mm]{c}
-// Detectamos flancos de (subida o) bajada
-if (currB1State && !prevB1State){
-    // UARTprintf("Button DOWN (LEFT  CLICK) ON\n");
-  prevB1State = 1;
-  butChange   = 1;
-  butReport = MOUSE_REPORT_BUTTON_2;
-}else if (!currB1State && prevB1State){
-  // UARTprintf("Button DOWN (LEFT  CLICK) OFF\n");
-  prevB1State = 0;
-  butChange   = 1;
-  butReport = MOUSE_REPORT_BUTTON_RELEASE;
-}
-
-// Detectamos flancos de subida (o bajada)
-if (currB2State && !prevB2State){
-  // UARTprintf("Button UP   (RIGHT CLICK) ON\n");
-  prevB2State = 1;
-  butChange   = 1;
-  butReport = MOUSE_REPORT_BUTTON_1;
-}else if (!currB2State && prevB2State){
-  // UARTprintf("Button UP   (RIGHT CLICK) OFF\n");
-  prevB2State = 0;
-  butChange   = 1;
-  butReport = MOUSE_REPORT_BUTTON_RELEASE;
-}
-
-if(butChange || movChange){ // Solo cuando pulsamos o dejamos de pulsar
-  // UARTprintf("Button change detected\n");
-  // Mandamos el reportaje al host.
-  g_iMouseState = STATE_SENDING;
-
-  uint32_t ui32Retcode = 0;
-  uint8_t  bSuccess = 0;
-  uint32_t numAtemp = 0;
-
-					while(!bSuccess && numAtemp < 60000){
-						numAtemp++;
-						ui32Retcode = USBDHIDMouseStateChange((void *) &g_sMouseDevice,xDistance,yDistance,butReport);
-
-
-						if (ui32Retcode == MOUSE_SUCCESS){
-							// Esperamos a que el host reciba el reportaje si ha ido bien
-							bSuccess = WaitForSendIdle(MAX_SEND_DELAY);
-
-							// Se ha acabado el tiempo y no se ha puesto en IDLE?
-							if (!bSuccess){
-								// Asumimos que el host se ha desconectado
-								// UARTprintf("Timout de envio\n");
-								g_bConnected = 0;
-							}
-							// UARTprintf("Reporte enviado %d,%d\n",numAtemp,butReport);
-						}else{
-							// Error al mandar reporte ignoramos petcion e informamos
-							// UARTprintf("No ha sido posible enviar reporte.\n");
-							bSuccess = false;
-						}
-					}
-					butChange = 0;
-					movChange = 0;
-				}
-\end{minted}
 
 \begin{lstlisting}[language=C,style=CStyle, caption={Declaración e inicialización de variables}]
 

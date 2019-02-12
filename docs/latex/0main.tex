@@ -136,11 +136,11 @@
 
 % %%%%%%%%%%%   INTRODUCCION %%%%%%%%%%%%%%%%%%
 \section{Introducción al proyecto}
-En el proyecto que se muestra a continuacion, se desarrollara un HID(\textit{Human Interface Device})el control del puntero de un host, en este caso un ordenador, haciendo  uso del Boosterpack \textit{BOOSTXL-SENSORS} y el microcontrolador \textit{Tiva TM4C1294}, ambos del fabricante \textit{Texas Instruments}.\\
-En primer lugar, se realizara una introduccion al hardware empleado en el mismo para, posteriormente, abordar el software. Tras ello, en los siguientes puntos del proyecto, se trataran aspectos como el funcionamiento a alto nivel del proyecto como los codigos implementados en propio microcontrolador.\\
+En este proyecto, se desarrollara un HID(\textit{Human Interface Device}) el control del puntero de un host, en este caso un ordenador, haciendo  uso del Boosterpack \textit{BOOSTXL-SENSORS} y el microcontrolador \textit{Tiva TM4C1294}, ambos del fabricante \textit{Texas Instruments}.\\
+En primer lugar, se realizará una introducción al hardware empleado en el mismo para, posteriormente, abordar el software. Tras ello, en los siguientes puntos del proyecto, se trataran aspectos como el funcionamiento a alto nivel del proyecto como los códigos implementados en propio microcontrolador.\\
 En un ultimo apartado se trataran futuras o posibles mejoras y sus posibles aplicaciones a la automatizacion industrial.
 \subsection{Descripcion del hardware empleado}
-Se ha empleado como placa de desarrollo del proyecto el modelo TM9C1294 de la serie Tiva C de Texas Instrument. Este microntrolador es el que se muestra a continuacion: \\
+Se ha empleado como placa de desarrollo del proyecto el modelo TM9C1294 de la serie Tiva C de Texas Instrument. Este microntrolador es el que se muestra a continuación: \\
  \begin{figure}[h!]
 	\centering
 	\includegraphics[width=.7\textwidth]{../images/tiva_tm4c1294}
@@ -172,7 +172,7 @@ En este proyecto, se emplearan las medidas asociadas a las velocidades angulares
  \caption{Movimento en torno al eje X que genera una variacion de velocidad angular}
 \end{figure}
 
-La variacion del angulo en torno al eje Z se medira del mismo modo, como se muestra a continuacion: \\
+La variación del angulo en torno al eje Z se medira del mismo modo, como se muestra a continuación: \\
 \begin{figure}[h!]
  \centering
  \includegraphics[width=.6\textwidth]{../images/mov_axisZ_bmi}
@@ -180,8 +180,7 @@ La variacion del angulo en torno al eje Z se medira del mismo modo, como se mues
 \end{figure}
 
 \newpage
-La comunicacion del sensor con otros sensores del boosterpack y con la placa sera por medio de $I^2C$, el cual es el principal bus serie de datos, empleado para la comunicacion entre elementos de un circuito. \\
-
+La comunicación del sensor con otros sensores del boosterpack y con la placa sera por medio de $I^2C$, el cual es el principal bus serie de datos, empleado para la comunicación entre elementos de un circuito. \\
 
 Al igual que antes, se puede consultar datos concretos de cada sensor en la guia proporcionada por el fabricante:
 \url{http://www.ti.com/lit/ug/slau666b/slau666b.pdf}
@@ -198,11 +197,11 @@ Principalmente, se emplearan las liberias asociadas al manejo de los perifericos
 Ademas de la gran ayuda brinda la API, se proporcionan una serie de ejemplos de uso que ayudaran al desarrollo del software propio. \\
 
 Ademas de ello, ha sido necesario el uso de librerias para el manejo de los GPio de la placa y la comunicacion por el puerto serie de la UART. \\
-Ademas de ello, se han empleado una serie de declaraciones proporciondadas por el profesor para solventar el desajuste de la actualizacion de las librerias, \textit{driverlib2.h} y \textit{sensorlib2.h}.
+Ademas de ello, se han empleado una serie de declaraciones proporciondadas por el profesor para solventar el desajuste de la actualizacion de las librerías, \textit{driverlib2.h} y \textit{sensorlib2.h}.
 
 \newpage
 \section{Funcionamiento del proyecto}
-En este apartado, se desarrollaran las principales funcionalidades implementadas en el proyecto. Las principales funciones son:
+En este apartado, se desarrollarán las principales funcionalidades implementadas en el proyecto. Las principales funciones son:
 \begin{itemize}
 \item Desarrollo de un HID con el microcontrolador.
 \item Empleo del Boosterpack para tomar la definir la posicion del puntero en la pantalla.
@@ -228,11 +227,11 @@ Por otro lado, para controlar la posicion del puntero en la pantalla, se hara us
 Como se mostro cuando se explico el boosterpack empleado que contiene el sensor, se tomaran las medidas de la velocidad angular en torno a los ejes X y Z. \\
 
 \section{Código de programación desarrollado}
-En primer lugar, es conveniente mistrar un esquema de las librerias y funciones empleadas en el proyecto. Ese esquema se muestra a continuacion:
+En primer lugar, es conveniente mostrar un esquema de las librerias y funciones empleadas en el proyecto. Ese esquema se muestra a continuacion:
 
 
 \newpage
-Em el codigo principal, es decir, en \textit{usb\_dev\_mouse.c}, en primer lugar se hara la declaracion de librerias. Las primeras librerias que se declararan son las asociadas a las funciones logicas del microntrolador.
+En el codigo principal, es decir, en \textit{usb\_dev\_mouse.c}, en primer lugar se hara la declaracion de librerias. Las primeras librerias que se declararan son las asociadas a las funciones logicas del microntrolador.
 
 \begin{listing}[h!]
 \inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/variables.c}
@@ -257,9 +256,9 @@ Em el codigo principal, es decir, en \textit{usb\_dev\_mouse.c}, en primer lugar
 
 \newpage
 \section{Posibles mejoras del proyecto}
-En cuando a la principal mejora del proyecto, se basara en la implementacion de una comunicacion inalambrica en el mismo. Durante el desarrollo del proyecto se plantearon diversas vias posibles de implementacion:
+En cuando a la principal mejora del proyecto, se basara en la implementación de una comunicación inalambrica en el mismo. Durante el desarrollo del proyecto se plantearon diversas vias posibles de implementacion:
 \begin{itemize}
-\item Implementacion de una comunicacion basada en radio-frecuencia. Esta via se planteo empleando el boosterpack del fabricante \textit{Texas Instrument}, CC110L, el cual emplea el protocolo de comunicacion SimpliciTI. Sin embargo, este modulo de radio frecuencia, ha sido disenado para su utilizacion con el microcontrolador MSP430, y es poco compatible con otros microcontroladores, aunque sea del mismo fabricante. \\
+\item Implementación de una comunicación basada en radio-frecuencia. Esta via se planteo empleando el boosterpack del fabricante \textit{Texas Instrument}, CC110L, el cual emplea el protocolo de comunicacion SimpliciTI. Sin embargo, este modulo de radio frecuencia, ha sido disenado para su utilizacion con el microcontrolador MSP430, y es poco compatible con otros microcontroladores, aunque sea del mismo fabricante. \\
 \begin{figure}[h!]
  \centering
  \includegraphics[width=.3\textwidth]{../images/rf_bp}

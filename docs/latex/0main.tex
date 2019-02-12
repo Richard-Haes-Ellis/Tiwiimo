@@ -136,9 +136,9 @@
 
 % %%%%%%%%%%%   INTRODUCCION %%%%%%%%%%%%%%%%%%
 \section{Introducción al proyecto}
-En el proyecto que se muestra a continuacion, se desarrollara un HID(\textit{Human Interface Device})el control del puntero de un host, en este caso un ordenador, haciendo  uso del Boosterpack \textit{BOOSTXL-SENSORS} y el microcontrolador \textit{Tiva TM4C1294}, ambos del fabricante \textit{Texas Instruments}.\\
+En este proyecto se desarrollara un HID(\textit{Human Interface Device}) para el control del puntero de un host, en este caso un ordenador, haciendo  uso del sensorpack \textit{BOOSTXL-SENSORS} y el microcontrolador \textit{Tiva TM4C1294}, ambos del fabricante \textit{Texas Instruments}.\\
 En primer lugar, se realizara una introduccion al hardware empleado en el mismo para, posteriormente, abordar el software. Tras ello, en los siguientes puntos del proyecto, se trataran aspectos como el funcionamiento a alto nivel del proyecto como los codigos implementados en propio microcontrolador.\\
-En un ultimo apartado se trataran futuras o posibles mejoras y sus posibles aplicaciones a la automatizacion industrial.
+En un ultimo apartado se trataran futuras o posibles mejoras y sus posibles aplicaciones.
 \subsection{Descripcion del hardware empleado}
 Se ha empleado como placa de desarrollo del proyecto el modelo TM9C1294 de la serie Tiva C de Texas Instrument. Este microntrolador es el que se muestra a continuacion: \\
  \begin{figure}[h!]
@@ -147,12 +147,12 @@ Se ha empleado como placa de desarrollo del proyecto el modelo TM9C1294 de la se
   \caption{Microcontrolador empleado en el proyecto}
 \end{figure}
 
-Como se puede observar, ademas de poseer una conexion Ethernet, USB y una serie de leds, tendra un microcontrolador integrado, el Tiva TM123GH, conectado a un puerto USB cuya funcionalidad sera programar el microcontrolador principal. \\
-Ademas de ello, dispone de dos pares de ristras de pines destinadas al conexionado de dos Boosterpacks distintos, de tal modo que se puedan ampliar las funcionalidades como pueden ser una pantalla o el boosterpack empleado en este proyecto, BOOSTXL-SENSORS. \\
+Como se puede observar, la placa incorpora una conexion Ethernet, un puerto USB y una serie de leds. Además tiene un microcontrolador integrado, el Tiva TM123GH, conectado a un puerto USB cuya funcionalidad sera programar el microcontrolador principal. \\
+Tambien se dispone de dos pares de ristras de pines destinadas al conexionado de dos Boosterpacks distintos, de tal modo que se puedan ampliar las funcionalidades como pueden ser una pantalla o el boosterpack empleado en este proyecto, BOOSTXL-SENSORS. \\
 
 Para conocer informacion adiccional sobre el microcontrolador implementado en la placa puede la guia propocionada por el fabricante: \url{http://www.ti.com/lit/ug/spmu365c/spmu365c.pdf}. \\
 
-Se ha optado por el uso de este microcontrolador para este proyecto por su capacidad de .......... lo de poder controladr el raton........
+Se ha optado por el uso de este microcontrolador para este proyecto por su capacidad de comunicar con un host por el puerto USB teniendo control total del periferico, de esta forma podemos emular dispostivos cotidianos como un teclado o un ratón. Además dispone de varios perifericos de comunicacion serie, los cuales nos sirven para acoplar dispostivos de radiofrecuencia y de esta forma eliminar el cableado.
 \newpage
 
 En cuanto al Boosterpack empleado, BOOSTXL-SENSORS, es el mostrado a continuacion: \\
@@ -162,7 +162,7 @@ En cuanto al Boosterpack empleado, BOOSTXL-SENSORS, es el mostrado a continuacio
  \caption{Boosterpack empleado en el proyecto}
 \end{figure}
 
-contiene una gran cantidad de sensores como son una IMU, un magnetometro, sensores ambiente y de luminosidad y sensor de temperatura. En lo que a este proyecto respecta, el principal sensor que se empleara sera la IMU integrada, la \textit{BMI160} de 6 ejes, es decir, se encuentra formada por un acelerometro de 3 ejes y un giroscopio de 3 ejes. \\
+Contiene una gran cantidad de sensores como son una IMU, un magnetometro, sensores de temperatura y humedad del ambiente y de luminosidad. En lo que a este proyecto respecta, el principal sensor que se empleara sera la IMU integrada, la \textit{BMI160} de 6 ejes, es decir, se encuentra formada por un acelerometro de 3 ejes y un giroscopio de 3 ejes. \\
 
 La medida del acelerometro sera dada en \textit{g}, la cual puede ser estimulada modificando la orientacion respecto a la gravedad de la tierra, o cambiando la velocidad a lo largo de un eje. En cuanto a la medida del giroscopio sera dada en grados por segundo, la cual se estimulara girando la placa respecto sus ejes absolutos. \\
 En este proyecto, se emplearan las medidas asociadas a las velocidades angulares en torno a los ejes X y Z, ya que son las unicas empleadas para posicionarse en el plano 2D que forma la pantalla del computador. Se mostrara a continuacion una imagen en la cual se mostrara el movimento en torno al eje X que generara una variacion de la velocidad angular medida por el giroscpio:\\

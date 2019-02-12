@@ -158,7 +158,7 @@ Se ha optado por el uso de este microcontrolador para este proyecto por su capac
 En cuanto al Boosterpack empleado, BOOSTXL-SENSORS, es el mostrado a continuacion: \\
 \begin{figure}[h!]
  \centering
- \includegraphics[width=.4\textwidth]{../images/sensors_bp}
+ \includegraphics[width=.3\textwidth]{../images/sensors_bp}
  \caption{Boosterpack empleado en el proyecto}
 \end{figure}
 
@@ -202,9 +202,43 @@ Ademas de ello, se han empleado una serie de declaraciones proporciondadas por e
 
 \newpage
 \section{Funcionamiento del proyecto}
-En cuando ...
+En este apartado, se desarrollaran las principales funcionalidades implementadas en el proyecto. Las principales funciones son:
+\begin{itemize}
+\item Desarrollo de un HID con el microcontrolador.
+\item Empleo del Boosterpack para tomar la definir la posicion del puntero en la pantalla.
+\item Filtrado de las medidas tomadas a nivel de software.
+\end{itemize}
+
+Un HID(\textit{Human Interface Device}) es una arquitectura de comunicacion empleada para comunicar los perifericos de interaccion humana como pueden ser ratones o teclados.\\
+La comunicación entre el dispositivo HID y el host se realiza a través de un conjunto de estructuras de "informes" definidas por el dispositivo que el host puede consultar. Los informes se definen tanto para la comunicación de la entrada del dispositivo con el host y para la selección de salidas y funciones del host. \\
+
+Además de la flexibilidad que ofrece la arquitectura básica, los dispositivos HID también se benefician de una gran universalidad entre sistemas operativos, lo que significa que no es necesario desarrollar un driver, sobre todo en el caso de dispositivos estándar como teclados y joysticks.\\
+A pesar de estas ventajas, el uso de HID tiene un inconveniente. La tasa de datos que pueden transferirse esta limitada a un máximo de 64 KB/s.\\
+
+Se empleara comunicacion mediante USB. El puerto USB de la familia Tiva TM4C de microcontroladores soporta 3 modos de funcionamiento:
+\begin{itemize}
+	\item \textbf{Host mode}: Permite conectar un teclado o un raton al microcontrolador.
+	\item \textbf{Device mode}:Establece una comunicacion con el PC a traves del USB.
+	\item \textbf{On-The-Go mode}: Permite multiplexar el USB entre hosts y dispositivos.
+\end{itemize}
+En este proyecto se empleara el USB en modo \textit{Device} o dispositivo, ya que se busca controlar el puntero del ordenador con el microcontrolador.\\
+Durante el desarrollo del codigo de programacion se detallara el modo en el que se establece esta comunicacion entre el ordenador y el microcontrolador por medio del USB para crear el HID buscado. \\
+
+Por otro lado, para controlar la posicion del puntero en la pantalla, se hara uso del giroscopio que, empleando la velocidad angular obtenida por el mismo, se podra estimar la posicion del puntero en el plano de la pantalla a partir de la definicion de un sistema inicial. \\
+Como se mostro cuando se explico el boosterpack empleado que contiene el sensor, se tomaran las medidas de la velocidad angular en torno a los ejes X y Z. \\
 
 \section{Código de programación desarrollado}
+En primer lugar, es conveniente mistrar un esquema de las librerias y funciones empleadas en el proyecto. Ese esquema se muestra a continuacion:
+
+
+\newpage
+Em el codigo principal, es decir, en \textit{usb\_dev\_mouse.c}, en primer lugar se hara la declaracion de librerias. Las primeras librerias que se declararan son las asociadas a las funciones logicas del microntrolador.
+\begin{lstlisting}[language=C,style=CStyle, caption={Inclusion de librerias}]
+// Librerias
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+\end{lstlisting}
 
 \newpage
 \section{Posibles mejoras del proyecto}
@@ -229,6 +263,7 @@ Esta ultima via de comunicacion, es la que se ha considerado mas factible ya que
 Debido a que la comunicacion con el ESP01 es UART, para establecer una comunicacion con `el seria necesario, ademas de todo el entramado de conexiones de red, enviar comandos por comunicacion serial. Sin embargo, no se ha optado por implementarlo en este proyecto, debido a la necesidad del uso de los objetos inherentes al lenguaje de programacion C++ y sus clases.
 
 \newpage
+
 \section{Anexos}
 
 

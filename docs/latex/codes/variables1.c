@@ -1,19 +1,7 @@
-/*******************************/
-/*          Defines            */
-/*******************************/
-#define SYSTICKS_PER_SECOND          100 // Ticks por segundo para contar cada 1 ms
-#define MAX_SEND_DELAY                80 // Tiempo supuesto que tarda en mandar un reporte
-#define MOUSE_REPORT_BUTTON_RELEASE 0x00 // Macro para definir boton sin pulsar
-#define N 3         				     // Numero de muestras a filtrar
-#define BP 2 							 // Posicion del booosterpack
-
-/*******************************/
-/*          Variables          */
-/*******************************/
-volatile bool g_bConnected = false; 	// Varibale que indica si esta conectado a PC
-volatile bool g_bSuspended = false; 	// Variable que indica si se ha desconectado del bus USB
+volatile bool g_bConnected = false; // Varibale que indica si esta conectado a PC
+volatile bool g_bSuspended = false; // Variable que indica si se ha desconectado del bus USB
 volatile uint32_t g_ui32SysTickCount;	// Contador del sistema (RELOJ)
-uint32_t g_ui32PrevSysTickCount = 0;	// Almacena valor del contador para contar tiempo
+uint32_t g_ui32PrevSysTickCount = 0; // Almacena valor del contador para contar tiempo
 
 // Buffer para la UART
 char string[50];
@@ -63,4 +51,3 @@ volatile enum{
 
 // Inicialmente marcamos el dispositivo como no configurado
 g_iMouseState = STATE_UNCONFIGURED;
-

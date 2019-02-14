@@ -1,0 +1,28 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kt}{bool} \PYG{n+nf}{WaitForSendIdle}\PYG{p}{(}\PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{ui32TimeoutTicks}\PYG{p}{)\PYGZob{}}
+\PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{ui32Start}\PYG{p}{,} \PYG{n}{ui32Now}\PYG{p}{,} \PYG{n}{ui32Elapsed}\PYG{p}{;}
+\PYG{n}{ui32Start} \PYG{o}{=} \PYG{n}{g\PYGZus{}ui32SysTickCount}\PYG{p}{;} \PYG{c+c1}{// Medimos el tiempo actual}
+\PYG{n}{ui32Elapsed} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+
+\PYG{c+c1}{// Mientras no haya timeout}
+\PYG{k}{while}\PYG{p}{(}\PYG{n}{ui32Elapsed} \PYG{o}{\PYGZlt{}} \PYG{n}{ui32TimeoutTicks}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+	\PYG{c+c1}{// Si esta el raton en estado de espera o no confugurado retornamos inmediatamete .}
+	\PYG{k}{if}\PYG{p}{((}\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{==} \PYG{n}{STATE\PYGZus{}IDLE}\PYG{p}{)} \PYG{o}{||} \PYG{p}{(}\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{==} \PYG{n}{STATE\PYGZus{}UNCONFIGURED}\PYG{p}{))}
+	\PYG{p}{\PYGZob{}}
+		\PYG{k}{return}\PYG{p}{(}\PYG{n+nb}{true}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{c+c1}{// Determinamos cuanto tiempo ha trascurrido desde que hemos esperado}
+	\PYG{c+c1}{// deberia funcionar para una  vuelta  entera  de  g\PYGZus{}ui32SysTickCount.}
+	\PYG{n}{ui32Now} \PYG{o}{=} \PYG{n}{g\PYGZus{}ui32SysTickCount}\PYG{p}{;} \PYG{c+c1}{// Medimos el tiempo actual}
+
+	\PYG{c+c1}{// En el caso de que haya buffer overflow y de la vuelta (FF \PYGZhy{}\PYGZgt{} 00)}
+	\PYG{c+c1}{// medimos la diferencia correspondiente}
+	\PYG{n}{ui32Elapsed} \PYG{o}{=} \PYG{p}{(}\PYG{n}{ui32Start} \PYG{o}{\PYGZlt{}} \PYG{n}{ui32Now}\PYG{p}{)} \PYG{o}{?} \PYG{p}{(}\PYG{n}{ui32Now} \PYG{o}{\PYGZhy{}} \PYG{n}{ui32Start}\PYG{p}{)} \PYG{o}{:}
+	\PYG{p}{(((}\PYG{k+kt}{uint32\PYGZus{}t}\PYG{p}{)}\PYG{l+m+mh}{0xFFFFFFFF} \PYG{o}{\PYGZhy{}} \PYG{n}{ui32Start}\PYG{p}{)} \PYG{o}{+} \PYG{n}{ui32Now} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\PYG{c+c1}{// Si hemos llegado aqui esque ha pasado una vuelta entera, es decir 2³² ticks}
+\PYG{c+c1}{// de g\PYGZus{}ui32SysTickCount, que se traduce a (0.001ms/tick)*(2³²tick) = 49.71 dias.. osea...}
+\PYG{k}{return}\PYG{p}{(}\PYG{n+nb}{false}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

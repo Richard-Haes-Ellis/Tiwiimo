@@ -1,0 +1,3 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{struct} \PYG{n}{bmi160\PYGZus{}gyro\PYGZus{}t} \PYG{n}{s\PYGZus{}gyroXYZ}
+\end{Verbatim}

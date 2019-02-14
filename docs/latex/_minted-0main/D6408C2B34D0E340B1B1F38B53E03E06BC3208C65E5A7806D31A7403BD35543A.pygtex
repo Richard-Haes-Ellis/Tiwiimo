@@ -1,0 +1,45 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kt}{uint32\PYGZus{}t} \PYG{n+nf}{HIDMouseHandler}\PYG{p}{(}\PYG{k+kt}{void} \PYG{o}{*}\PYG{n}{pvCBData}\PYG{p}{,} \PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{ui32Event}\PYG{p}{,}\PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{ui32MsgData}\PYG{p}{,} \PYG{k+kt}{void} \PYG{o}{*}\PYG{n}{pvMsgData}\PYG{p}{)\PYGZob{}}
+\PYG{k}{switch} \PYG{p}{(}\PYG{n}{ui32Event}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{c+c1}{// Si se conecta al bus, ui32Event se pondra a USB\PYGZus{}EVENT\PYGZus{}CONNECTED}
+	\PYG{k}{case} \PYG{n+nl}{USB\PYGZus{}EVENT\PYGZus{}CONNECTED}\PYG{p}{:}
+	\PYG{p}{\PYGZob{}}
+		\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{=} \PYG{n}{STATE\PYGZus{}IDLE}\PYG{p}{;} \PYG{c+c1}{// Estado de espera}
+		\PYG{n}{g\PYGZus{}bConnected} \PYG{o}{=} \PYG{n+nb}{true}\PYG{p}{;} \PYG{c+c1}{// Inidcamos conexion}
+		\PYG{n}{g\PYGZus{}bSuspended} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;}	\PYG{c+c1}{// Y no suspenso}
+		\PYG{k}{break}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{c+c1}{// Si se desconecta al bus ui32Event se pondra a USB\PYGZus{}EVENT\PYGZus{}DISCONNECTED.}
+	\PYG{k}{case} \PYG{n+nl}{USB\PYGZus{}EVENT\PYGZus{}DISCONNECTED}\PYG{p}{:}
+	\PYG{p}{\PYGZob{}}
+		\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{=} \PYG{n}{STATE\PYGZus{}UNCONFIGURED}\PYG{p}{;} \PYG{c+c1}{// Estado desconfigurado}
+		\PYG{n}{g\PYGZus{}bConnected} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;} \PYG{c+c1}{// Indicamos desconexion}
+		\PYG{k}{break}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{c+c1}{// Nos vamos al estado de espera despues de haber enviado informacion}
+	\PYG{k}{case} \PYG{n+nl}{USB\PYGZus{}EVENT\PYGZus{}TX\PYGZus{}COMPLETE}\PYG{p}{:}
+	\PYG{p}{\PYGZob{}}
+		\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{=} \PYG{n}{STATE\PYGZus{}IDLE}\PYG{p}{;} \PYG{c+c1}{// Estado de espera}
+		\PYG{k}{break}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{c+c1}{// Si se ha suspendido el bus USB ui32Event saltara al estado USB\PYGZus{}EVENT\PYGZus{}SUSPEND}
+	\PYG{k}{case} \PYG{n+nl}{USB\PYGZus{}EVENT\PYGZus{}SUSPEND}\PYG{p}{:}
+	\PYG{p}{\PYGZob{}}
+		\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{=} \PYG{n}{STATE\PYGZus{}SUSPEND}\PYG{p}{;} \PYG{c+c1}{// Estado de suspension}
+		\PYG{n}{g\PYGZus{}bSuspended} \PYG{o}{=} \PYG{n+nb}{true}\PYG{p}{;} \PYG{c+c1}{// Indicamos suspension}
+		\PYG{k}{break}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{c+c1}{// Si el bus se recupera volvemos al estado de IDLE}
+	\PYG{k}{case} \PYG{n+nl}{USB\PYGZus{}EVENT\PYGZus{}RESUME}\PYG{p}{:}
+	\PYG{p}{\PYGZob{}}
+		\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{=} \PYG{n}{STATE\PYGZus{}IDLE}\PYG{p}{;} \PYG{c+c1}{// Estado de espera}
+		\PYG{n}{g\PYGZus{}bSuspended} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;} \PYG{c+c1}{// Indicamos no suspension}
+		\PYG{k}{break}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{c+c1}{// Cualquier otro evento la ignoramos}
+	\PYG{k}{default}\PYG{o}{:}\PYG{p}{\PYGZob{}} \PYG{k}{break}\PYG{p}{;\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+	\PYG{k}{return} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

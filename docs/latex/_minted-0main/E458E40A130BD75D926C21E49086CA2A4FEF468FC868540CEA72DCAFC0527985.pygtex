@@ -1,0 +1,257 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kt}{int} \PYG{n+nf}{main}\PYG{p}{(}\PYG{k+kt}{void}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+\PYG{k+kt}{bool} \PYG{n}{bLastSuspend}\PYG{p}{;}
+\PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{ui32SysClock}\PYG{p}{;}
+\PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{ui32PLLRate}\PYG{p}{;}
+
+\PYG{c+c1}{// Run from the PLL at 120 MHz.}
+\PYG{n}{ui32SysClock} \PYG{o}{=} \PYG{n}{MAP\PYGZus{}SysCtlClockFreqSet}\PYG{p}{((}\PYG{n}{SYSCTL\PYGZus{}XTAL\PYGZus{}25MHZ} \PYG{o}{|} \PYG{n}{SYSCTL\PYGZus{}OSC\PYGZus{}MAIN} \PYG{o}{|} \PYG{n}{SYSCTL\PYGZus{}USE\PYGZus{}PLL} \PYG{o}{|} \PYG{n}{SYSCTL\PYGZus{}CFG\PYGZus{}VCO\PYGZus{}480}\PYG{p}{),}\PYG{l+m+mi}{120000000}\PYG{p}{);}
+
+\PYG{c+c1}{// Configuramos el boosterpack}
+\PYG{n}{Conf\PYGZus{}Boosterpack}\PYG{p}{(}\PYG{n}{BP}\PYG{p}{,} \PYG{n}{ui32SysClock}\PYG{p}{);}
+
+\PYG{c+c1}{// Configuramos los pines de la uart (ETHERNET|UART)}
+\PYG{n}{PinoutSet}\PYG{p}{(}\PYG{n+nb}{false}\PYG{p}{,} \PYG{n+nb}{true}\PYG{p}{);}
+
+\PYG{c+c1}{// Inicializamos los botones de la placa}
+\PYG{n}{ButtonsInit}\PYG{p}{();}
+
+\PYG{c+c1}{// Habilitamos el periferico UART0}
+\PYG{n}{ROM\PYGZus{}SysCtlPeripheralEnable}\PYG{p}{(}\PYG{n}{SYSCTL\PYGZus{}PERIPH\PYGZus{}UART0}\PYG{p}{);}
+
+\PYG{c+c1}{// Inicializamos la UART para la consola .}
+\PYG{n}{UARTStdioConfig}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{115200}\PYG{p}{,} \PYG{n}{ui32SysClock}\PYG{p}{);}
+
+\PYG{c+c1}{// Inicialmente el raton estara desconfigurado}
+\PYG{n}{g\PYGZus{}bConnected} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;}
+\PYG{n}{g\PYGZus{}bSuspended} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;}
+\PYG{n}{bLastSuspend} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;}
+
+\PYG{c+c1}{// Inicializamos el stack del USB para el modo dispositivo}
+\PYG{n}{USBStackModeSet}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{eUSBModeDevice}\PYG{p}{,}      \PYG{l+m+mi}{0}\PYG{p}{);}
+
+\PYG{c+c1}{// Le decimos a la libreria USB el clock de la CPU y la frecuncia de la PLL}
+\PYG{c+c1}{// Es requerido para las placas TM4C129.}
+\PYG{n}{SysCtlVCOGet}\PYG{p}{(}\PYG{n}{SYSCTL\PYGZus{}XTAL\PYGZus{}25MHZ}\PYG{p}{,}            \PYG{o}{\PYGZam{}}\PYG{n}{ui32PLLRate}\PYG{p}{);}
+\PYG{n}{USBDCDFeatureSet}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{USBLIB\PYGZus{}FEATURE\PYGZus{}CPUCLK}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{ui32SysClock}\PYG{p}{);}
+\PYG{n}{USBDCDFeatureSet}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{USBLIB\PYGZus{}FEATURE\PYGZus{}USBPLL}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{ui32PLLRate}\PYG{p}{);}
+
+\PYG{c+c1}{// Pasamos informacion de nuestro dispositivo al dirver USB HID}
+\PYG{c+c1}{// Inicializamos el controlador USB y conectamos el dispositvo al bus}
+\PYG{n}{USBDHIDMouseInit}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{p}{(}\PYG{n}{tUSBDHIDMouseDevice} \PYG{o}{*}\PYG{p}{)}\PYG{o}{\PYGZam{}}\PYG{n}{g\PYGZus{}sMouseDevice}\PYG{p}{);}
+
+\PYG{c+c1}{// Configuramos el reloj del sistema para contar 100 veces por segudo}
+\PYG{n}{ROM\PYGZus{}SysTickPeriodSet}\PYG{p}{(}\PYG{n}{ui32SysClock} \PYG{o}{/} \PYG{n}{SYSTICKS\PYGZus{}PER\PYGZus{}SECOND}\PYG{p}{);}
+\PYG{n}{ROM\PYGZus{}SysTickIntEnable}\PYG{p}{();}
+\PYG{n}{ROM\PYGZus{}SysTickEnable}\PYG{p}{();}
+
+\PYG{c+c1}{// Mensaje Inicial}
+\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}033}\PYG{l+s}{[2J}\PYG{l+s+se}{\PYGZbs{}033}\PYG{l+s}{[H}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}******************************}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}*         usb\PYGZhy{}mouse	         *}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}******************************}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+
+\PYG{c+c1}{// Comprobamos el funcionamiento del sensor}
+\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}033}\PYG{l+s}{[2J }\PYG{l+s+se}{\PYGZbs{}033}\PYG{l+s}{[1;1H Inicializando BMI160... \PYGZdq{}}\PYG{p}{);}
+\PYG{n}{cod\PYGZus{}err} \PYG{o}{=} \PYG{n}{Test\PYGZus{}I2C\PYGZus{}dir}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{BMI160\PYGZus{}I2C\PYGZus{}ADDR2}\PYG{p}{);}
+\PYG{k}{if} \PYG{p}{(}\PYG{n}{cod\PYGZus{}err}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+	\PYG{c+c1}{// Fallo del sensor}
+	\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Error 0X\PYGZpc{}x en BMI160}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{cod\PYGZus{}err}\PYG{p}{);}
+	\PYG{n}{Bmi\PYGZus{}OK} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\PYG{k}{else}
+\PYG{p}{\PYGZob{}}
+	\PYG{c+c1}{// Exito}
+	\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Inicializando BMI160, modo NAVIGATION... \PYGZdq{}}\PYG{p}{);}
+	\PYG{n}{bmi160\PYGZus{}initialize\PYGZus{}sensor}\PYG{p}{();}
+	\PYG{n}{bmi160\PYGZus{}config\PYGZus{}running\PYGZus{}mode}\PYG{p}{(}\PYG{n}{APPLICATION\PYGZus{}NAVIGATION}\PYG{p}{);}
+	\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Hecho! }\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Leyendo DevID... \PYGZdq{}}\PYG{p}{);}
+	\PYG{n}{readI2C}\PYG{p}{(}\PYG{n}{BMI160\PYGZus{}I2C\PYGZus{}ADDR2}\PYG{p}{,} \PYG{n}{BMI160\PYGZus{}USER\PYGZus{}CHIP\PYGZus{}ID\PYGZus{}ADDR}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{DevID}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{);}
+	\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}DevID= 0X\PYGZpc{}x }\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{DevID}\PYG{p}{);}
+	\PYG{n}{Bmi\PYGZus{}OK} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/* BUCLE PRINCIPAL ****************************************************/}
+\PYG{c+cm}{/* Empezamos esperando a que se conecte el micro a algun host , luego */}
+\PYG{c+cm}{/* Luego entramos en el manejador de botones y movimiento del sensor  */}
+\PYG{c+cm}{/* Si por lo que sea nos desconectamos del host volvemos a la espera  */}
+\PYG{c+cm}{/**********************************************************************/}
+\PYG{k}{while} \PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+\PYG{k+kt}{uint8\PYGZus{}t} \PYG{n}{ui8Buttons}\PYG{p}{;}
+\PYG{k+kt}{uint8\PYGZus{}t} \PYG{n}{ui8ButtonsChanged}\PYG{p}{;}
+
+\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Esperamos al host...}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+
+\PYG{c+c1}{// Indica que el micro aun no esta listo para usar}
+\PYG{n}{GPIOPinWrite}\PYG{p}{(}\PYG{n}{GPIO\PYGZus{}PORTF\PYGZus{}BASE}\PYG{p}{,} \PYG{n}{GPIO\PYGZus{}PIN\PYGZus{}0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{);}
+
+\PYG{c+c1}{// Nos quedamos esperado si no esta conectado al host (PC)}
+\PYG{k}{while} \PYG{p}{(}\PYG{o}{!}\PYG{n}{g\PYGZus{}bConnected}\PYG{p}{)\PYGZob{}\PYGZcb{}}
+
+\PYG{c+c1}{// Indica que el micro esta listo para usar}
+\PYG{n}{GPIOPinWrite}\PYG{p}{(}\PYG{n}{GPIO\PYGZus{}PORTF\PYGZus{}BASE}\PYG{p}{,} \PYG{n}{GPIO\PYGZus{}PIN\PYGZus{}0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{);}
+
+\PYG{c+c1}{// Una vez connectada informamos por UART}
+\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Host conectado...}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+
+\PYG{c+c1}{// Marcamos el estado de espera}
+\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{=} \PYG{n}{STATE\PYGZus{}IDLE}\PYG{p}{;}
+
+\PYG{c+c1}{// Declaramos variable de botones}
+\PYG{k+kt}{uint8\PYGZus{}t} \PYG{n}{currB1State}\PYG{p}{,}\PYG{n}{prevB1State} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{k+kt}{uint8\PYGZus{}t} \PYG{n}{currB2State}\PYG{p}{,}\PYG{n}{prevB2State} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{k+kt}{uint8\PYGZus{}t} \PYG{n}{butReport} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+
+\PYG{c+c1}{// En principio marcamos como bus no suspenso (Ya que nos acabamos de conectar)}
+\PYG{n}{bLastSuspend} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;}
+
+\PYG{c+c1}{// Continuamos con nuestra logica de programa (Funcionnalidad del raton)}
+\PYG{c+c1}{// mientras estamos conectados. Esta variable es manejada por el MouseHandler}
+\PYG{c+c1}{// en funcion de los eventos que ocurran (Conexion/Desconecion/Suspension..)}
+\PYG{k}{while} \PYG{p}{(}\PYG{n}{g\PYGZus{}bConnected}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+	\PYG{c+c1}{// Comprobamos si el estado de suspenso ha cambiado}
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{bLastSuspend} \PYG{o}{!=} \PYG{n}{g\PYGZus{}bSuspended}\PYG{p}{)}
+	\PYG{p}{\PYGZob{}}
+		\PYG{c+c1}{// En caso de que si informamos por UART}
+		\PYG{n}{bLastSuspend} \PYG{o}{=} \PYG{n}{g\PYGZus{}bSuspended}\PYG{p}{;}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{bLastSuspend}\PYG{p}{)}
+		\PYG{p}{\PYGZob{}}
+			\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Bus Suspended ... }\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+		\PYG{p}{\PYGZcb{}}
+		\PYG{k}{else}
+		\PYG{p}{\PYGZob{}}
+			\PYG{n}{UARTprintf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Host Connected ... }\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{c+c1}{// Si estamos en el estado de espera podemos realizar las funcionalidades normales}
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{==} \PYG{n}{STATE\PYGZus{}IDLE}\PYG{p}{)}
+	\PYG{p}{\PYGZob{}}
+		\PYG{c+c1}{// Si ha pasado mas de 10 ms actualizamos}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{g\PYGZus{}ui32SysTickCount} \PYG{o}{\PYGZhy{}} \PYG{n}{g\PYGZus{}ui32PrevSysTickCount} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1}\PYG{p}{)}
+		\PYG{p}{\PYGZob{}}
+			\PYG{c+c1}{// Reseteamos el cotador}
+			\PYG{n}{g\PYGZus{}ui32PrevSysTickCount} \PYG{o}{=} \PYG{n}{g\PYGZus{}ui32SysTickCount}\PYG{p}{;}
+			\PYG{c+c1}{// Si el sensor esta bien}
+			\PYG{k}{if} \PYG{p}{(}\PYG{n}{Bmi\PYGZus{}OK}\PYG{p}{)}
+			\PYG{p}{\PYGZob{}}
+				\PYG{c+c1}{// Leemos los datos por I2C}
+				\PYG{n}{bmi160\PYGZus{}read\PYGZus{}gyro\PYGZus{}xyz}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{s\PYGZus{}gyroXYZ}\PYG{p}{);}
+
+				\PYG{c+c1}{// Filtramos los datos}
+				\PYG{n}{xdata} \PYG{o}{=} \PYG{n}{filter}\PYG{p}{(}\PYG{n}{s\PYGZus{}gyroXYZ}\PYG{p}{.}\PYG{n}{x}\PYG{o}{\PYGZhy{}}\PYG{n}{gyro\PYGZus{}off\PYGZus{}x}\PYG{p}{,}\PYG{n}{xfilterBuff}\PYG{p}{);}
+				\PYG{n}{ydata} \PYG{o}{=} \PYG{n}{filter}\PYG{p}{(}\PYG{n}{s\PYGZus{}gyroXYZ}\PYG{p}{.}\PYG{n}{z}\PYG{o}{\PYGZhy{}}\PYG{n}{gyro\PYGZus{}off\PYGZus{}z}\PYG{p}{,}\PYG{n}{yfilterBuff}\PYG{p}{);}
+
+				\PYG{c+c1}{// QUE RANGO TOMA s\PYGZus{}gyroXYX ? \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZgt{} 16 bits!!!}
+				\PYG{c+c1}{// Se DEBE escalar desde \PYGZhy{}32768 a 32767. Lo hacemos por casting}
+				\PYG{k}{if}\PYG{p}{((}\PYG{n}{xdata}\PYG{o}{/}\PYG{n}{scaling}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{n}{thresh} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{xdata}\PYG{o}{/}\PYG{n}{scaling}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{o}{\PYGZhy{}}\PYG{n}{thresh}\PYG{p}{)}
+				\PYG{p}{\PYGZob{}}	\PYG{c+c1}{// Si esta dentro del umbral [\PYGZhy{}thresh,thres] rechazamos}
+					\PYG{n}{yDistance} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+				\PYG{p}{\PYGZcb{}}
+				\PYG{k}{else}
+				\PYG{p}{\PYGZob{}}	\PYG{c+c1}{// En cualquier otro caso lo aceptamosy escalamos el dato}
+					\PYG{n}{yDistance} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{p}{(}\PYG{k+kt}{int8\PYGZus{}t}\PYG{p}{)(}\PYG{n}{xdata}\PYG{o}{/}\PYG{n}{scaling}\PYG{p}{);}
+				\PYG{p}{\PYGZcb{}}
+
+				\PYG{c+c1}{// Lo mismo para el eje x}
+				\PYG{k}{if}\PYG{p}{((}\PYG{n}{ydata}\PYG{o}{/}\PYG{n}{scaling}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{n}{thresh} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{ydata}\PYG{o}{/}\PYG{n}{scaling}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{o}{\PYGZhy{}}\PYG{n}{thresh}\PYG{p}{)}
+				\PYG{p}{\PYGZob{}}
+					\PYG{n}{xDistance} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+				\PYG{p}{\PYGZcb{}}
+				\PYG{k}{else}
+				\PYG{p}{\PYGZob{}}
+					\PYG{n}{xDistance} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{p}{(}\PYG{k+kt}{int8\PYGZus{}t}\PYG{p}{)(}\PYG{n}{ydata}\PYG{o}{/}\PYG{n}{scaling}\PYG{p}{);}
+				\PYG{p}{\PYGZcb{}}
+
+				\PYG{c+c1}{// Indicamos entonces que el raton se ha movido}
+				\PYG{n}{movChange} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;}
+			\PYG{p}{\PYGZcb{}}
+		\PYG{p}{\PYGZcb{}}
+
+		\PYG{c+c1}{// Comprobamos si los botones han sido pulsados}
+		\PYG{n}{ButtonsPoll}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{ui8ButtonsChanged}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{ui8Buttons}\PYG{p}{);}
+
+		\PYG{c+c1}{// Actualizamos las variables de estado de los botones}
+		\PYG{n}{currB1State} \PYG{o}{=} \PYG{p}{(}\PYG{n}{ui8Buttons} \PYG{o}{\PYGZam{}} \PYG{n}{LEFT\PYGZus{}BUTTON}\PYG{p}{);}
+		\PYG{n}{currB2State} \PYG{o}{=} \PYG{p}{(}\PYG{n}{ui8Buttons} \PYG{o}{\PYGZam{}} \PYG{n}{RIGHT\PYGZus{}BUTTON}\PYG{p}{);}
+
+		\PYG{n}{butChange} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+
+		\PYG{c+c1}{// Detectamos flancos de subida o bajada}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{currB1State} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{o}{!}\PYG{n}{prevB1State}\PYG{p}{)} 	\PYG{c+c1}{// SUBIDA (0\PYGZhy{}\PYGZgt{}1)}
+		\PYG{p}{\PYGZob{}}
+			\PYG{n}{prevB1State} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{c+c1}{// Actualizamos el valor posterior}
+			\PYG{n}{butChange}   \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{c+c1}{// Indicamos cambio de estado}
+			\PYG{n}{butReport} \PYG{o}{=} \PYG{n}{MOUSE\PYGZus{}REPORT\PYGZus{}BUTTON\PYGZus{}2}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+		\PYG{k}{else} \PYG{k}{if} \PYG{p}{(}\PYG{o}{!}\PYG{n}{currB1State} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{prevB1State}\PYG{p}{)} \PYG{c+c1}{// BAJADA (1\PYGZhy{}\PYGZgt{}0)}
+		\PYG{p}{\PYGZob{}}
+			\PYG{n}{prevB1State} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{c+c1}{// Actualizamos el valor posterior}
+			\PYG{n}{butChange}   \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{c+c1}{// Indicamos cambio de estado}
+			\PYG{n}{butReport} \PYG{o}{=} \PYG{n}{MOUSE\PYGZus{}REPORT\PYGZus{}BUTTON\PYGZus{}RELEASE}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+
+		\PYG{c+c1}{// Detectamos flancos de subida o bajada}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{currB2State} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{o}{!}\PYG{n}{prevB2State}\PYG{p}{)}	\PYG{c+c1}{// SUBIDA (0\PYGZhy{}\PYGZgt{}1)}
+		\PYG{p}{\PYGZob{}}
+			\PYG{n}{prevB2State} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{c+c1}{// Actualizamos el valor posterior}
+			\PYG{n}{butChange}   \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{c+c1}{// Indicamos cambio de estado}
+			\PYG{n}{butReport} \PYG{o}{=} \PYG{n}{MOUSE\PYGZus{}REPORT\PYGZus{}BUTTON\PYGZus{}1}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+		\PYG{k}{else} \PYG{k}{if} \PYG{p}{(}\PYG{o}{!}\PYG{n}{currB2State} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{prevB2State}\PYG{p}{)} \PYG{c+c1}{// BAJADA (1\PYGZhy{}\PYGZgt{}0)}
+		\PYG{p}{\PYGZob{}}
+			\PYG{n}{prevB2State} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{c+c1}{// Actualizamos el valor posterior}
+			\PYG{n}{butChange}   \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{c+c1}{// Indicamos cambio de estado}
+			\PYG{n}{butReport} \PYG{o}{=} \PYG{n}{MOUSE\PYGZus{}REPORT\PYGZus{}BUTTON\PYGZus{}RELEASE}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+
+		\PYG{c+c1}{// Solo mandamos reportes al host si ha habido cambios}
+		\PYG{k}{if}\PYG{p}{(}\PYG{n}{butChange} \PYG{o}{||} \PYG{n}{movChange}\PYG{p}{)}
+		\PYG{p}{\PYGZob{}}
+			\PYG{c+c1}{// Indicamos estado de envio}
+			\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{=} \PYG{n}{STATE\PYGZus{}SENDING}\PYG{p}{;}
+			\PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{ui32Retcode} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+			\PYG{k+kt}{uint8\PYGZus{}t}  \PYG{n}{bSuccess} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+			\PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{numAtemp} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+				\PYG{c+c1}{// Mandamos el reportaje continuamente si falla}
+			\PYG{k}{while}\PYG{p}{(}\PYG{o}{!}\PYG{n}{bSuccess} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{numAtemp} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{60000}\PYG{p}{)}
+			\PYG{p}{\PYGZob{}}
+				\PYG{n}{numAtemp}\PYG{o}{++}\PYG{p}{;} \PYG{c+c1}{// Numero de intentos}
+				\PYG{c+c1}{// Mandamos el reporte}
+				\PYG{n}{ui32Retcode} \PYG{o}{=} \PYG{n}{USBDHIDMouseStateChange}\PYG{p}{((}\PYG{k+kt}{void} \PYG{o}{*}\PYG{p}{)} \PYG{o}{\PYGZam{}}\PYG{n}{g\PYGZus{}sMouseDevice}\PYG{p}{,}
+				\PYG{n}{xDistance}\PYG{p}{,}	\PYG{c+c1}{// Desplazamiento de pixeles en el eje x}
+				\PYG{n}{yDistance}\PYG{p}{,}	\PYG{c+c1}{// Desplazamiento de pixeles en el eje y}
+				\PYG{n}{butReport}\PYG{p}{);} \PYG{c+c1}{// Estado de los botones}
+
+				\PYG{c+c1}{// Si ha habido exito enviando el reporte}
+				\PYG{k}{if} \PYG{p}{(}\PYG{n}{ui32Retcode} \PYG{o}{==} \PYG{n}{MOUSE\PYGZus{}SUCCESS}\PYG{p}{)}
+				\PYG{p}{\PYGZob{}}
+					\PYG{c+c1}{// Esperamos a que el host reciba el reportaje si ha ido bien}
+					\PYG{n}{bSuccess} \PYG{o}{=} \PYG{n}{WaitForSendIdle}\PYG{p}{(}\PYG{n}{MAX\PYGZus{}SEND\PYGZus{}DELAY}\PYG{p}{);}
+
+					\PYG{c+c1}{// Se ha acabado el tiempo y no se ha puesto en IDLE?}
+					\PYG{k}{if} \PYG{p}{(}\PYG{o}{!}\PYG{n}{bSuccess}\PYG{p}{)}
+					\PYG{p}{\PYGZob{}}
+						\PYG{c+c1}{// Asumimos que el host se ha desconectado}
+						\PYG{n}{g\PYGZus{}bConnected} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;}
+					\PYG{p}{\PYGZcb{}}
+				\PYG{p}{\PYGZcb{}}
+				\PYG{k}{else}
+				\PYG{p}{\PYGZob{}}
+					\PYG{c+c1}{// Error al mandar reporte ignoramos petcion e informamos}
+					\PYG{c+c1}{// UARTprintf(\PYGZdq{}No ha sido posible enviar reporte.\PYGZbs{}n\PYGZdq{});}
+					\PYG{n}{bSuccess} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;}
+				\PYG{p}{\PYGZcb{}}
+			\PYG{p}{\PYGZcb{}}
+			\PYG{c+c1}{// Reseteamos las variables de cambios de estado}
+			\PYG{n}{butChange} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+			\PYG{n}{movChange} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

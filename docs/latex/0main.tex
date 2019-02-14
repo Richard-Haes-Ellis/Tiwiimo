@@ -178,9 +178,19 @@ La variación del angulo en torno al eje Z se medira del mismo modo, como se mue
 \newpage
 La comunicación del sensor con otros sensores del boosterpack y con la placa sera por medio de $I^2C$, el cual es el principal bus serie de datos, empleado para la comunicación entre elementos de un circuito. \\
 
+Cabe destacar que los datos adquiridos del sensor viene con un ruido que afecta el funcionameitno del dispositovo, por lo que se ha empleado un filtro paso bajo, que no viene ser mas que haciendo la media de las 3 muestras anteriores. Los resutados de dicho filtro se encuentra en la siguente figura;
+\\
+ \begin{figure}[h!]
+	\centering
+	\includegraphics[width=1\textwidth]{../images/filter}
+  \caption{Grafica de filtrado de datos del acelerometro}
+\end{figure}
+
 Al igual que antes, se puede consultar datos concretos de cada sensor en la guia proporcionada por el fabricante:
 \url{http://www.ti.com/lit/ug/slau666b/slau666b.pdf}
 
+
+\newpage
 \subsection{Descripcion del software empleado}
 En cuanto al software empleado se basara en la API proporcionada por el fabricante, \textit{TivaWare} para la familia de microcontoladores TIVA. Esta API contiene los elementos que se muestran en la siguiente imagen:\\
 \begin{figure}[h!]
@@ -223,7 +233,7 @@ Por otro lado, para controlar la posicion del puntero en la pantalla, se hara us
 Como se mostro cuando se explico el boosterpack empleado que contiene el sensor, se tomaran las medidas de la velocidad angular en torno a los ejes X y Z. \\
 También mencionar la pulsación de los botones del mouse, que se asociarán a los botones 1 y 2 de la placa.
 \section{Código de programación desarrollado}
-A continuación se mostrará la estructura a nivel de software del proyecto. A continuación se desarrollarán los siguientes subapartados:
+A continuación se mostrará un breve resumen de los diferentes apartados del código ya que en el mismo se encuentra detalladamente comentado cada funcionalidad. 
 \begin{itemize}
 \item Instanciación de librerías
 \item Declaración de variables
@@ -234,7 +244,7 @@ A continuación se mostrará la estructura a nivel de software del proyecto. A c
 
 \newpage
 \subsection{Instanciacion de librerias}
-En el codigo principal, es decir, en \textit{usb\_dev\_mouse.c}, en primer lugar se hara la declaracion de librerias. Se emplearán las librerías genericas proporcionadas por el fabricante de manejo del hardware integrado en el microcontrolador. Además, se incluirán las librerías que emplearán de la \textit{Driverlib} y de la \textit{Usblib}, sobre todo las dedicadas al manejo del USB HID mouse, además de los drivers de los botones y los pines del microcontrolador. También se instanciará el fichero que contiene el struct necesario para emular un HID con el microcontrolador.
+En el codigo principal, es decir, en \textit{usb\_dev\_mouse.c}, se hara la declaracion de librerias. Se emplearán las librerías genericas proporcionadas por el fabricante de manejo del hardware integrado en el microcontrolador. Además, se incluirán las librerías que emplearán de la \textit{Driverlib} y de la \textit{Usblib}, sobre todo las dedicadas al manejo del USB HID mouse, además de los drivers de los botones y los pines del microcontrolador. También se instanciará el fichero que contiene el struct necesario que contiene informacion del fabricante entre otros. De esta forma podemso emular un HID con el microcontrolador.
 \begin{listing}[h!]
 \inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/librerias.c}
 \caption{Instanciacion de librerías}
@@ -248,8 +258,8 @@ Tras ello, se pasará a los \mintinline{c}|#defines| y las variables del código
 \caption{Defines del código}
 \end{listing}
 
-En lo que a las variables empleadas en el código concierne, se definirán una serie de variables encargadas de mantener el estado del HID implementado. Tras ello, se definirán una serie de variables necesarias y empleadas en para tomar los datos de la IMU y filtrarla para poder emplear estos datos para orientarse.\\
-Por último, se definirá un \mintinline{c}|volatile enum| para conocer el estado del ratón, el cuál servirá para la maquina de estados que gobierna el HID.
+En lo que a las variables empleadas en el código concierne, se definirán una serie de variables encargadas de mantener el estado del HID implementado. Tras ello, se definirán una serie de variables necesarias y empleadas en para tomar los datos de la IMU y filtrarla para poder emplear estos datos para el desplazamiento del puntero.\\
+Por último, se definirá un \mintinline{c}|volatile enum| para conocer el estado del ratón, el cuál servirá para la logica de programa que gobierna el HID.
 \begin{mdframed}[linecolor=black, topline=false, bottomline=false, leftline=false, rightline=false]
 \inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/variables1.c}
 \end{mdframed}
@@ -260,7 +270,7 @@ Por último, se definirá un \mintinline{c}|volatile enum| para conocer el estad
 Una vez analizadas las variables y librerias empleadas en el código principal se pasará al análisis de las funciones. La funciones empleadas en éste código serán:
 \begin{itemize}
   \item \textbf{SysTickIntHandler}:\\
-Esta función será la encargada de ir incrementando una cuenta en base al reloj implementado en el sistema:
+Esta función será la encargada de ir incrementando una cuenta en base a un reloj configurable, en nuestro caso lo hemos configurado de tal forma que cuente 100 ticks por segundo.
     \begin{listing}[h!]
     \inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/fun_tick.c}
     \caption{Defines del código}
@@ -276,7 +286,7 @@ Esta funcion sera la encargada de realizar una espera para el envio de señales 
 
 \vspace{4cm}
 \item \textbf{HIDMouseHandler}:\\
-La función que se muestra a continuación será la encargada de manejar la maquina de estados que gobierna el funcionamiento del HID implementado en funcion del \mintinline{c}|volatile enum| definido anteriormente. Esta enumentacion contendrá los posibles estados en los que se puede encontrar el HID, es decir, conectado, desconectado, transmisión completada, suspendido o cuando se recupera tras la desconexion. \\
+La función que se muestra a continuación será la encargada de manejar el estado del raton que gobierna el funcionamiento del HID implementado en funcion del \mintinline{c}|volatile enum| definido anteriormente. Esta enumentacion contendrá los posibles estados en los que se puede encontrar el HID, es decir, conectado, desconectado, transmisión completada, suspendido o cuando se recupera tras la desconexion. \\
 \newpage
   \begin{listing}[h!]
   \inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/fun_hid.c}
@@ -298,7 +308,7 @@ Para no sobrecargar la lectura, se ha optado por incluir el codigo principal del
 En primer lugar se definirán las variables locales y se inicializará los perifericos y el reloj del microntrolador. Ademas de ello, se configurará el HID pasandole la estructura creada en \textit{usb\_mouse\_struct.c}. Esta inicializacion y configuracion del sistema ocurre entre las lineas  \\
 Tras ello, se verificará el correcto funcionamiento de la IMU y comenzará el bucle infinito.\\
 En él se esperará que se conecte el microcontrolador para iniciar el modo host. Una vez hecho esto, en funcion de los eventos que ocurran, es decir, conexion o desconexion del micro, se leeran datos de la IMU. Estos datos seran filtrados y escalados para posteriormente ser enviados al host. \\
-En cuanto a la emulación de los botones del mouse, se emplearán los botones 1 y 2 de la placa para ello. Se leerán las pulsaciones empleando flancos de subida. \\
+En cuanto a la emulación de los botones del mouse, se emplearán los botones 1 y 2 de la placa para ello. Se leerán las pulsaciones empleando flancos de subida o bajada. \\
 Por último, se enviarán los datos al host y se volverá al inicio del bucle.
 
 \newpage

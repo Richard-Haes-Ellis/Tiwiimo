@@ -1,0 +1,25 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kt}{int32\PYGZus{}t} \PYG{n+nf}{filter}\PYG{p}{(}\PYG{k+kt}{int32\PYGZus{}t} \PYG{n}{sensVal}\PYG{p}{,} \PYG{k+kt}{int32\PYGZus{}t} \PYG{n}{values}\PYG{p}{[}\PYG{n}{N}\PYG{p}{])}
+\PYG{p}{\PYGZob{}}
+	\PYG{k+kt}{int8\PYGZus{}t} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{k+kt}{int8\PYGZus{}t} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{k+kt}{int32\PYGZus{}t} \PYG{n}{avg}\PYG{p}{;}
+
+	\PYG{c+c1}{// Desplazamos todos los elementos a la izquierda}
+	\PYG{k}{for} \PYG{p}{(}\PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{i}\PYG{o}{++}\PYG{p}{)}
+	\PYG{p}{\PYGZob{}}
+		\PYG{n}{values}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{values}\PYG{p}{[}\PYG{n}{i} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{];}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{c+c1}{// Introducimos la medida al ultimo elemento del vector}
+	\PYG{n}{values}\PYG{p}{[}\PYG{n}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sensVal}\PYG{p}{;}
+
+	\PYG{c+c1}{// Calculamos el valor medio de todos los elementos del vector}
+	\PYG{n}{avg} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{k}{for} \PYG{p}{(}\PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{N}\PYG{p}{;} \PYG{n}{i}\PYG{o}{++}\PYG{p}{)}
+	\PYG{p}{\PYGZob{}}
+		\PYG{n}{avg} \PYG{o}{=} \PYG{n}{avg} \PYG{o}{+} \PYG{n}{values}\PYG{p}{[}\PYG{n}{i}\PYG{p}{];}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{k}{return} \PYG{n}{avg} \PYG{o}{/} \PYG{n}{N}\PYG{p}{;} \PYG{c+c1}{// Dividimos para la media}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

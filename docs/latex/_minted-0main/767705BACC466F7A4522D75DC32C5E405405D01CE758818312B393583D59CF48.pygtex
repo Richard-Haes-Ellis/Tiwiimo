@@ -1,0 +1,7 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cp}{\PYGZsh{}define SYSTICKS\PYGZus{}PER\PYGZus{}SECOND 100 }\PYG{c+c1}{// Ticks por segundo para contar cada 1 ms}
+\PYG{c+cp}{\PYGZsh{}define MAX\PYGZus{}SEND\PYGZus{}DELAY 80 }\PYG{c+c1}{// Tiempo supuesto que tarda en mandar un reporte}
+\PYG{c+cp}{\PYGZsh{}define MOUSE\PYGZus{}REPORT\PYGZus{}BUTTON\PYGZus{}RELEASE 0x00 }\PYG{c+c1}{// Macro para definir boton sin pulsar}
+\PYG{c+cp}{\PYGZsh{}define N 3 }\PYG{c+c1}{// Numero de muestras a filtrar}
+\PYG{c+cp}{\PYGZsh{}define BP 2 }\PYG{c+c1}{// Posicion del booosterpack}
+\end{Verbatim}

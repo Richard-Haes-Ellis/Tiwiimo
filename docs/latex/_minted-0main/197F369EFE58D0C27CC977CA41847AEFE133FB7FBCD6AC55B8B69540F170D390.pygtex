@@ -1,0 +1,6 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// Interrupcion de cuenta de reloj del sistema}
+\PYG{k+kt}{void} \PYG{n+nf}{SysTickIntHandler}\PYG{p}{(}\PYG{k+kt}{void}\PYG{p}{)\PYGZob{}}
+	\PYG{n}{g\PYGZus{}ui32SysTickCount}\PYG{o}{++}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

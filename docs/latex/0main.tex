@@ -233,7 +233,7 @@ Por otro lado, para controlar la posicion del puntero en la pantalla, se hara us
 Como se mostro cuando se explico el boosterpack empleado que contiene el sensor, se tomaran las medidas de la velocidad angular en torno a los ejes X y Z. \\
 También mencionar la pulsación de los botones del mouse, que se asociarán a los botones 1 y 2 de la placa.
 \section{Código de programación desarrollado}
-A continuación se mostrará un breve resumen de los diferentes apartados del código ya que en el mismo se encuentra detalladamente comentado cada funcionalidad. 
+A continuación se mostrará un breve resumen de los diferentes apartados del código ya que en el mismo se encuentra detalladamente comentado cada funcionalidad.
 \begin{itemize}
 \item Instanciación de librerías
 \item Declaración de variables
@@ -334,7 +334,17 @@ Esta ultima via de comunicacion, es la que se ha considerado mas factible ya que
 La comunicacion del modulo ESP01 es mediante UART(\textit{Universal Asynchronous Receiver-Transmitter}), y debido a que el microntrolador posee 8 puertos UART, es una aplicación bastante factible. Empleando las funciones para enviar datos por la UART en función de la dirección base de la misma, las cuales se encuentran ya diseñadas en el directorio raiz de este proyecto, seria posible establecer una comunicacion serial con el modulo Wi-Fi. Sin embargo, una vez establecida dicha comunicación serial, la cual conlleva consigo una sincronizacion de relojes entre las UART y la comunicación USB para implementar el dispositivo. \\
 Una vez establecida esta comunicación, es necesario trazar un entramado de conexiones de red para crear un servidor TCP en el ESP01 a modo de punto de acceso al cual se pueda conectar el otro, el cual se encuentra en el otro microcontrolador, de tal modo que le envíe los datos por tramas TCP asociados a la IMU y la pulsación de los botones.\\
 
+Por tanto, el esquema de montaje esperado cuando el proyecto haya sido mejorado, añadiendo la funcionalidad inalambrica es el siguiente:
+\begin{figure}[h!]
+ \centering
+ \includegraphics[width=.7\textwidth]{../images/mejora_esp}
+ \caption{Esquema de comunicaciones}
+\end{figure}
+
+
 No se ha optado por implementarlo en este proyecto, debido a la necesidad del uso de los objetos inherentes al lenguaje de programacion C++ y sus clases para establecer un buen entramado de conexiones de red. Además de ello presentó una notable carga de tiempo de trabajo la sincronización de los relojes. \\
+
+Destacar que las aplicaciones de este proyecto son muy extendidas, desde su uso para la ayuda a personas con movilidad reducida para su rehabilitacion, hasta el control de drones. Ya que el dispositivo diseñado esta estandarizado.
 
 \newpage
 \section{Anexos}
@@ -343,5 +353,9 @@ No se ha optado por implementarlo en este proyecto, debido a la necesidad del us
 \inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/main.c}
 \end{mdframed}
 
+\subsection{Estructura identificadora del HID}
+\begin{mdframed}[linecolor=black, topline=false, bottomline=false, leftline=false, rightline=false]
+\inputminted[linenos,breaklines,frame=lines,framesep=2mm]{c}{codes/usb_mouse_structs.c}
+\end{mdframed}
 
 \end{document}

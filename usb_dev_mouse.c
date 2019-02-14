@@ -72,9 +72,8 @@ int  DevID=0;
 struct bmi160_gyro_t s_gyroXYZ;
 
 // DATOS DE CALIBRACION
-int16_t gyro_off_x = 6;	 	// Offset del eje x
-int16_t gyro_off_y = -19;	// Offset del eje y
-int16_t gyro_off_z = -19;	// Offset del eje z
+int16_t gyro_off_x = 12;	// Offset del eje x
+int16_t gyro_off_z = 12;	// Offset del eje z
 
 // Variables de sensibilidad
 int32_t scaling = 23; 	// Rango [1,Inf] A mas valor menos sensible
@@ -400,8 +399,8 @@ int main(void)
 						bmi160_read_gyro_xyz(&s_gyroXYZ);
 
 						// Filtramos los datos
-						xdata = filter(s_gyroXYZ.x-gyro_off_x,xfilterBuff);
-						ydata = filter(s_gyroXYZ.z-gyro_off_z,yfilterBuff);
+						xdata = filter(s_gyroXYZ.x+gyro_off_x,xfilterBuff);
+						ydata = filter(s_gyroXYZ.z+gyro_off_z,yfilterBuff);
 
 						// QUE RANGO TOMA s_gyroXYX ? ----> 16 bits!!!
 						// Se DEBE escalar desde -32768 a 32767. Lo hacemos por casting
@@ -423,6 +422,9 @@ int main(void)
 						{
 							xDistance = -(int8_t)(ydata/scaling);
 						}
+
+						// Para graficar en Matlab
+						// UARTprintf("%d\t %d\t %d;\n",s_gyroXYZ.x,xdata,xDistance);
 
 						// Indicamos entonces que el raton se ha movido
 						movChange = 1;

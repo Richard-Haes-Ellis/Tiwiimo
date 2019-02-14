@@ -1,0 +1,55 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{volatile} \PYG{k+kt}{bool} \PYG{n}{g\PYGZus{}bConnected} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;} \PYG{c+c1}{// Varibale que indica si esta conectado a PC}
+\PYG{k}{volatile} \PYG{k+kt}{bool} \PYG{n}{g\PYGZus{}bSuspended} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;} \PYG{c+c1}{// Variable que indica si se ha desconectado del bus USB}
+\PYG{k}{volatile} \PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{g\PYGZus{}ui32SysTickCount}\PYG{p}{;}	\PYG{c+c1}{// Contador del sistema (RELOJ)}
+\PYG{k+kt}{uint32\PYGZus{}t} \PYG{n}{g\PYGZus{}ui32PrevSysTickCount} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{c+c1}{// Almacena valor del contador para contar tiempo}
+
+\PYG{c+c1}{// Buffer para la UART}
+\PYG{k+kt}{char} \PYG{n}{string}\PYG{p}{[}\PYG{l+m+mi}{50}\PYG{p}{];}
+
+\PYG{c+c1}{// ID del sensor BMI160}
+\PYG{k+kt}{int}  \PYG{n}{DevID}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{;}
+
+\PYG{c+c1}{// Almacena variables del gyroscopo}
+\PYG{k}{struct} \PYG{n}{bmi160\PYGZus{}gyro\PYGZus{}t} \PYG{n}{s\PYGZus{}gyroXYZ}\PYG{p}{;}
+
+\PYG{c+c1}{// DATOS DE CALIBRACION}
+\PYG{k+kt}{int16\PYGZus{}t} \PYG{n}{gyro\PYGZus{}off\PYGZus{}x} \PYG{o}{=} \PYG{l+m+mi}{6}\PYG{p}{;}	 	\PYG{c+c1}{// Offset del eje x}
+\PYG{k+kt}{int16\PYGZus{}t} \PYG{n}{gyro\PYGZus{}off\PYGZus{}y} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{19}\PYG{p}{;}	\PYG{c+c1}{// Offset del eje y}
+\PYG{k+kt}{int16\PYGZus{}t} \PYG{n}{gyro\PYGZus{}off\PYGZus{}z} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{19}\PYG{p}{;}	\PYG{c+c1}{// Offset del eje z}
+
+\PYG{c+c1}{// Variables de sensibilidad}
+\PYG{k+kt}{int32\PYGZus{}t} \PYG{n}{scaling} \PYG{o}{=} \PYG{l+m+mi}{23}\PYG{p}{;} 	\PYG{c+c1}{// Rango [1,Inf] A mas valor menos sensible}
+\PYG{k+kt}{int32\PYGZus{}t} \PYG{n}{thresh}  \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{;} 	\PYG{c+c1}{// Rangp [1,Inf] A mas valor menos responde a movimientos}
+
+\PYG{c+c1}{// Buffers para almacenar muestras para el filtrado}
+\PYG{k+kt}{int32\PYGZus{}t} \PYG{n}{xfilterBuff}\PYG{p}{[}\PYG{n}{N}\PYG{p}{];} \PYG{c+c1}{// Eje x}
+\PYG{k+kt}{int32\PYGZus{}t} \PYG{n}{yfilterBuff}\PYG{p}{[}\PYG{n}{N}\PYG{p}{];} \PYG{c+c1}{// Eje y}
+
+\PYG{c+c1}{// Codigo de error}
+\PYG{k+kt}{uint8\PYGZus{}t} \PYG{n}{cod\PYGZus{}err}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{k+kt}{uint8\PYGZus{}t} \PYG{n}{Bme\PYGZus{}OK} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{Bmi\PYGZus{}OK}\PYG{p}{;}
+
+\PYG{c+c1}{// Datos filtrados}
+\PYG{k+kt}{int32\PYGZus{}t} \PYG{n}{xdata} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} 		\PYG{c+c1}{// Eje x}
+\PYG{k+kt}{int32\PYGZus{}t} \PYG{n}{ydata} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} 		\PYG{c+c1}{// Eje y}
+
+\PYG{c+c1}{// Datos procesados (Escalado y Umbral)}
+\PYG{k+kt}{int8\PYGZus{}t} \PYG{n}{xDistance} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} 	\PYG{c+c1}{// Eje x}
+\PYG{k+kt}{int8\PYGZus{}t} \PYG{n}{yDistance} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} 	\PYG{c+c1}{// Eje y}
+
+\PYG{c+c1}{// Variables de estado}
+\PYG{k+kt}{uint8\PYGZus{}t} \PYG{n}{movChange} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}	\PYG{c+c1}{// Indica cambio de movimiento}
+\PYG{k+kt}{uint8\PYGZus{}t} \PYG{n}{butChange} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}	\PYG{c+c1}{// Indica cambio en el estado de los botones}
+
+\PYG{c+c1}{// Varibles de estado del raton}
+\PYG{k}{volatile} \PYG{k}{enum}\PYG{p}{\PYGZob{}}
+	\PYG{n}{STATE\PYGZus{}UNCONFIGURED}\PYG{p}{,}	\PYG{c+c1}{// Raton sin configurar}
+	\PYG{n}{STATE\PYGZus{}IDLE}\PYG{p}{,}			\PYG{c+c1}{// Nada que mandar y a la espera de datos}
+	\PYG{n}{STATE\PYGZus{}SUSPEND}\PYG{p}{,}		\PYG{c+c1}{// Estado de suspenso}
+	\PYG{n}{STATE\PYGZus{}SENDING}		\PYG{c+c1}{// Esperando a los datos para enviar (No lo usamos)}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Inicialmente marcamos el dispositivo como no configurado}
+\PYG{n}{g\PYGZus{}iMouseState} \PYG{o}{=} \PYG{n}{STATE\PYGZus{}UNCONFIGURED}\PYG{p}{;}
+\end{Verbatim}
